@@ -4,7 +4,9 @@ This is a generic Teleinfo French Meter Measure Library
 - Github source : <https://github.com/hallard/LibTeleinfo>
 
 # Added features :
-- Add all possible variable (without ejp) following : 
+- Add possibility to configure HttpRequest to send parameters/values to Domoticz
+- Add all possible variable as listed below : 
+- Add some informations to 'System' page, like Wifi link quality, Wifi network name, and MAC address
 
 Ces différents messages donnent les indications suivantes en fonction de l’abonnement souscrit :
 - N° d’identification du compteur : ADCO (12 caractères)
@@ -31,5 +33,4 @@ Ces différents messages donnent les indications suivantes en fonction de l’ab
 - Groupe horaire si option = heures creuses ou tempo : HHPHC (1 car.)
 - Mot d’état (autocontrôle) : MOTDETAT (6 car.)
 
-HTTP Request push datas 
 
