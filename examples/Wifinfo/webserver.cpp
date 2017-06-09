@@ -406,6 +406,16 @@ void getSysJSONData(String & response)
       response += "{\"na\":\"Wifi RSSI\",\"va\":\"";
       response += WiFi.RSSI();
       response += " dB\"},\r\n";
+      response += "{\"na\":\"Wifi network\",\"va\":\"";
+      response += config.ssid;
+      response += "\"},\r\n";
+      uint8_t mac[] = {0, 0, 0, 0, 0, 0};
+      uint8_t* macread = WiFi.macAddress(mac);
+      char macaddress[20];
+      sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
+      response += "{\"na\":\"Adresse MAC station\",\"va\":\"";
+      response += macaddress;
+      response += "\"},\r\n";
   }
     
   response += "{\"na\":\"WifInfo Version\",\"va\":\"" WIFINFO_VERSION "\"},\r\n";
