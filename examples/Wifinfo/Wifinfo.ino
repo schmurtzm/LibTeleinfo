@@ -34,6 +34,7 @@
 #include <NeoPixelBus.h>
 #include <LibTeleinfo.h>
 #include <FS.h>
+#include <SPI.h>
 
 // Global project file
 #include "Wifinfo.h"
