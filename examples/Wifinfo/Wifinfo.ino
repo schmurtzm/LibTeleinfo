@@ -75,6 +75,9 @@ unsigned long seconds = 0;
 // sysinfo data
 _sysinfo sysinfo;
 
+// count Wifi connect attempts, to check stability
+int       nb_reconnect = 0;
+
 /* ======================================================================
 Function: UpdateSysinfo 
 Purpose : update sysinfo variables
@@ -479,6 +482,7 @@ int WifiHandleConn(boolean setup = false)
     // connected ? disable AP, client mode only
     if (ret == WL_CONNECTED)
     {
+      nb_reconnect++;         // increase reconnections count
       DebuglnF("connected!");
       WiFi.mode(WIFI_STA);
 
