@@ -417,7 +417,10 @@ void getSysJSONData(String & response)
       response += macaddress;
       response += "\"},\r\n";
   }
-    
+  response += "{\"na\":\"Nb reconnexions Wifi\",\"va\":\"";
+  response += nb_reconnect;
+  response += "\"},\r\n"; 
+  
   response += "{\"na\":\"WifInfo Version\",\"va\":\"" WIFINFO_VERSION "\"},\r\n";
 
   response += "{\"na\":\"Compile le\",\"va\":\"" __DATE__ " " __TIME__ "\"},\r\n";
