@@ -4,6 +4,12 @@ This is a generic Teleinfo French Meter Measure Library
 - Github source : <https://github.com/hallard/LibTeleinfo>
 
 # Added features :
+
+Branch weblog :
+- Create a new tab in web page, to display debug messages 
+- Replace all 'Debug' macros by call to 'addLog' function which stores messages in circular memory table
+
+
 - Add possibility to configure HttpRequest to send parameters/values to Domoticz
 - Add all possible variable as listed below : 
 - Add some informations to 'System' page, like Wifi link quality, Wifi network name, and MAC address
