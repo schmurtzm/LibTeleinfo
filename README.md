@@ -9,7 +9,7 @@ Branch weblog :
 - Create a new tab in web page, to display debug messages 
 - Replace all 'Debug' macros by call to 'addLog' function which stores messages in circular memory table
 
-
+Branch master :
 - Add possibility to configure HttpRequest to send parameters/values to Domoticz
 - Add all possible variable as listed below : 
 - Add some informations to 'System' page, like Wifi link quality, Wifi network name, and MAC address
