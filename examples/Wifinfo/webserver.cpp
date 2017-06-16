@@ -95,24 +95,27 @@ bool handleFileRead(String path) {
   String contentType = getContentType(path);
   String pathWithGz = path + ".gz";
 
-  DebugF("handleFileRead ");
-  Debug(path);
+  ToLog+="handleFileRead ";
+  ToLog += path;
+  //DebugF("handleFileRead ");
+  //Debug(path);
 
   if(SPIFFS.exists(pathWithGz) || SPIFFS.exists(path)) {
     if( SPIFFS.exists(pathWithGz) ){
       path += ".gz";
-      DebugF(".gz");
+      ToLog += ".gz";
+      //DebugF(".gz");
     }
-
-    DebuglnF(" found on FS");
+    ToLog += " found on FS"; addLog();
+    //DebuglnF(" found on FS");
  
     File file = SPIFFS.open(path, "r");
     size_t sent = server.streamFile(file, contentType);
     file.close();
     return true;
   }
-
-  Debugln("");
+  addLog();
+  //Debugln("");
 
   server.send(404, "text/plain", "File Not Found");
   return false;
@@ -136,7 +139,8 @@ void handleFormConfig(void)
   if (server.hasArg("save"))
   {
     int itemp;
-    DebuglnF("===== Posted configuration"); 
+    ToLog += "===== Posted configuration"; addLog();
+    //DebuglnF("===== Posted configuration");
 
     // WifInfo
     strncpy(config.ssid ,   server.arg("ssid").c_str(),     CFG_SSID_SIZE );
@@ -213,10 +217,11 @@ void handleFormConfig(void)
     response = "Missing Form Field";
   }
 
-  DebugF("Sending response "); 
-  Debug(ret); 
-  Debug(":"); 
-  Debugln(response); 
+  ToLog += "Sending response "; ToLog += ret; ToLog += ":"; ToLog += response; addLog();
+  //DebugF("Sending response ");
+  //Debug(ret);
+  //Debug(":");
+  //Debugln(response);
   server.send ( ret, "text/plain", response);
   LedBluOFF();
 }
@@ -276,7 +281,8 @@ void formatNumberJSON( String &response, char * value)
         response += p ;
       }
     } else {
-      Debugln(F("formatNumberJSON error!"));
+      ToLog += "formatNumberJSON error!"; addLog();
+      //Debugln(F("formatNumberJSON error!"));
     }
   }
 }
@@ -296,7 +302,8 @@ void tinfoJSONTable(void)
   String response = "";
 
   // Just to debug where we are
-  Debug(F("Serving /tinfo page...\r\n"));
+  ToLog += "Serving /tinfo page..."; addLog();
+  //Debug(F("Serving /tinfo page...\r\n"));
 
   // Got at least one ?
   if (me) {
@@ -369,17 +376,76 @@ void tinfoJSONTable(void)
    response += F("\r\n]");
 
   } else {
-    Debugln(F("sending 404..."));
+	ToLog += "sending 404..."; addLog();
+    //Debugln(F("sending 404..."));
     server.send ( 404, "text/plain", "No data" );
   }
-  Debug(F("sending..."));
+  ToLog += "sending...";
+  //Debug(F("sending..."));
   server.send ( 200, "text/json", response );
-  Debugln(F("OK!"));
+  //Debugln(F("OK!"));
+  ToLog += "OK!"; addLog();
 }
 
 
+/* ======================================================================
+Function: getLogJSONData
+Purpose : Return JSON string containing Log data
+Input   : Response String
+Output  : -
+Comments: -
+====================================================================== */
+void getLogJSONData(String & response)
+{
+  
+   //ToLog="Building /Log table... "; addLog();
+   
+   // Json start
+  response += F("[\r\n");
+  
+  if (logcount != -1)
+  {
+    byte counter = logcount;
+    do
+    {
+      counter++;
+      if (counter >= logsize)
+        counter = 0;
+        
+      response += "{\"na\":\""; response += Logging[counter].Timestamp; response += "\",\"va\":\"";
+      response += Logging[counter].Message;
+      if(counter != logcount)
+        response += "\"},\r\n";
+      else
+        response += "\"}\r\n";  // no comma on last line
+    }  while (counter != logcount);
+  }
+   //ToLog +="Built lines : "; ToLog += cpt; addLog();
+   
+  // Json end
+  response += F("]\r\n");
+  
+  //Debugln(response);
+}
+/* ======================================================================
+Function: LogJSONTable
+Purpose : dump all Log lines in JSON table format for browser
+Input   : -
+Output  : -
+Comments: -
+====================================================================== */
+void LogJSONTable()
+{
+  String response = "";
 
+  getLogJSONData(response);
 
+  // Just to debug where we are
+  //ToLog="Serving /Log page... ";
+  server.send ( 200, "text/json", response );
+  //ToLog += "OK!"; addLog();
+
+}
 
 /* ======================================================================
 Function: getSysJSONData 
@@ -496,9 +562,11 @@ void sysJSONTable()
   getSysJSONData(response);
 
   // Just to debug where we are
-  Debug(F("Serving /system page..."));
+  ToLog="Serving /system page... ";
+  //Debug(F("Serving /system page..."));
   server.send ( 200, "text/json", response );
-  Debugln(F("Ok!"));
+  ToLog += "OK!"; addLog();
+  //Debugln(F("Ok!"));
 }
 
 
@@ -560,9 +628,11 @@ void confJSONTable()
   String response = "";
   getConfJSONData(response);
   // Just to debug where we are
-  Debug(F("Serving /config page..."));
+  ToLog += "Serving /config page...";
+  //Debug(F("Serving /config page..."));
   server.send ( 200, "text/json", response );
-  Debugln(F("Ok!"));
+  ToLog += "Ok!"; addLog();
+  //Debugln(F("Ok!"));
 }
 
 /* ======================================================================
@@ -686,7 +756,8 @@ void wifiScanJSON(void)
   bool first = true;
 
   // Just to debug where we are
-  Debug(F("Serving /wifiscan page..."));
+  ToLog += "Serving /wifiscan page...";
+  //Debug(F("Serving /wifiscan page..."));
 
   int n = WiFi.scanNetworks();
 
@@ -719,9 +790,11 @@ void wifiScanJSON(void)
   // Json end
   response += FPSTR("]\r\n");
 
-  Debug(F("sending..."));
+  ToLog += "sending...";
+  //Debug(F("sending..."));
   server.send ( 200, "text/json", response );
-  Debugln(F("Ok!"));
+  ToLog += "Ok!"; addLog();
+  //Debugln(F("Ok!"));
 }
 
 
@@ -757,10 +830,12 @@ Comments: -
 void handleReset(void)
 {
   // Just to debug where we are
-  Debug(F("Serving /reset page..."));
-  Debug(F("sending..."));
+  ToLog += "Serving /reset page...sending...";
+  //Debug(F("Serving /reset page..."));
+  //Debug(F("sending..."));
   server.send ( 200, "text/plain", FPSTR(FP_RESTART) );
-  Debugln(F("Ok!"));
+  ToLog += "Ok!"; addLog();
+  //Debugln(F("Ok!"));
   delay(1000);
   ESP.restart();
   while (true)
@@ -795,7 +870,8 @@ void handleNotFound(void)
     // convert uri to char * for compare
     uri = server.uri().c_str();
 
-    Debugf("handleNotFound(%s)\r\n", uri);
+    sprintf(mano, "handleNotFound(%s)", uri); ToLog += mano; addLog();
+    //Debugf("handleNotFound(%s)\r\n", uri);
 
     // Got at least one and consistent URI ?
     if (me && uri && *uri=='/' && *++uri ) {

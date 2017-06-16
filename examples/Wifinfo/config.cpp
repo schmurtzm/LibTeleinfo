@@ -55,24 +55,29 @@ void eepromDump(uint8_t bytesPerRow)
   if (bytesPerRow==0)
     bytesPerRow=16;
 
-  Debugln();
+  //Debugln();
     
   // loop thru EEP address
   for (i = 0; i < sizeof(_Config); i++) {
     // First byte of the row ?
     if (j==0) {
 			// Display Address
-      Debugf("%04X : ", i);
+    	sprintf(mano, "%04X : ",i);Temp += mano;
+    	ToLog+=mano;
+      //Debugf("%04X : ", i);
     }
 
     // write byte in hex form
-    Debugf("%02X ", EEPROM.read(i));
+    sprintf(mano,"%02X ", EEPROM.read(i));Temp += mano;
+    ToLog+=mano;
+    //Debugf("%02X ", EEPROM.read(i));
 
 		// Last byte of the row ?
     // start a new line
     if (++j >= bytesPerRow) {
 			j=0;
-      Debugln();
+	   addLog();
+      //Debugln();
 		}
   }
 }
@@ -152,12 +157,17 @@ bool saveConfig (void)
   // default config and breaks OTA
   ret_code = readConfig(false);
   
-  Debug(F("Write config "));
+  ToLog="Write config ";
+  //Debug(F("Write config "));
   
-  if (ret_code)
-    Debugln(F("OK!"));
-  else
-    Debugln(F("Error!"));
+  if (ret_code) {
+	  ToLog += "OK!"; addLog();
+      //Debugln(F("OK!"));
+  } else {
+    ToLog += "Error!"; addLog();
+      
+	  //Debugln(F("Error!"));
+  }
 
   //eepromDump(32);
   
@@ -174,38 +184,71 @@ Comments: -
 ====================================================================== */
 void showConfig() 
 {
-  DebuglnF("===== Wifi"); 
-  DebugF("ssid     :"); Debugln(config.ssid); 
-  DebugF("psk      :"); Debugln(config.psk); 
-  DebugF("host     :"); Debugln(config.host); 
-  DebugF("ap_psk   :"); Debugln(config.ap_psk); 
-  DebugF("OTA auth :"); Debugln(config.ota_auth); 
-  DebugF("OTA port :"); Debugln(config.ota_port); 
-  DebugF("Config   :"); 
-  if (config.config & CFG_RGB_LED) DebugF(" RGB"); 
-  if (config.config & CFG_DEBUG)   DebugF(" DEBUG"); 
-  if (config.config & CFG_LCD)     DebugF(" LCD"); 
+  ToLog += "===== Wifi"; addLog();
+  ToLog += "ssid     :"; ToLog += config.ssid; addLog();
+  ToLog += "psk      :"; ToLog += config.psk; addLog();
+  ToLog += "host     :"; ToLog += config.host; addLog();
+  ToLog += "ap_psk   :"; ToLog += config.ap_psk; addLog();
+  ToLog += "OTA auth :"; ToLog += config.ota_auth; addLog();
+  ToLog += "OTA port :"; ToLog += config.ota_port; addLog();
+  ToLog += "Config   :";
+    if (config.config & CFG_RGB_LED) ToLog += " RGB";
+    if (config.config & CFG_DEBUG)   ToLog += " DEBUG";
+    if (config.config & CFG_LCD)     ToLog += " LCD";
+  addLog();
+  ToLog += "===== Emoncms"; addLog();
+  ToLog += "host     :"; ToLog += config.emoncms.host;  addLog();
+  ToLog += "port     :"; ToLog += config.emoncms.port;  addLog();
+  ToLog += "url      :"; ToLog += config.emoncms.url;  addLog();
+  ToLog += "key      :"; ToLog += config.emoncms.apikey;  addLog();
+  ToLog += "node     :"; ToLog += config.emoncms.node;  addLog();
+  ToLog += "freq     :"; ToLog += config.emoncms.freq;  addLog();
 
-  DebuglnF("\r\n===== Emoncms"); 
-  DebugF("host     :"); Debugln(config.emoncms.host); 
-  DebugF("port     :"); Debugln(config.emoncms.port); 
-  DebugF("url      :"); Debugln(config.emoncms.url); 
-  DebugF("key      :"); Debugln(config.emoncms.apikey); 
-  DebugF("node     :"); Debugln(config.emoncms.node); 
-  DebugF("freq     :"); Debugln(config.emoncms.freq); 
+  ToLog += "===== Jeedom";  addLog();
+  ToLog += "host     :"; ToLog += config.jeedom.host; addLog();
+  ToLog += "port     :"; ToLog += config.jeedom.port;  addLog();
+  ToLog += "url      :"; ToLog += config.jeedom.url;  addLog();
+  ToLog += "key      :"; ToLog += config.jeedom.apikey;  addLog();
+  ToLog += "compteur :"; ToLog += config.jeedom.adco;  addLog();
+  ToLog += "freq     :"; ToLog += config.jeedom.freq;  addLog();
 
-  DebuglnF("\r\n===== Jeedom"); 
-  DebugF("host     :"); Debugln(config.jeedom.host); 
-  DebugF("port     :"); Debugln(config.jeedom.port); 
-  DebugF("url      :"); Debugln(config.jeedom.url); 
-  DebugF("key      :"); Debugln(config.jeedom.apikey); 
-  DebugF("compteur :"); Debugln(config.jeedom.adco); 
-  DebugF("freq     :"); Debugln(config.jeedom.freq); 
+  ToLog += "===== HTTP request";  addLog();
+  ToLog += "host     :"; ToLog += config.httpReq.host; addLog();
+  ToLog += "port     :"; ToLog += config.httpReq.port;  addLog();
+  ToLog += "path     :"; ToLog += config.httpReq.path;  addLog();
+  ToLog += "freq     :"; ToLog += config.httpReq.freq;  addLog();
+  //DebuglnF("===== Wifi");
+  //DebugF("ssid     :"); Debugln(config.ssid);
+  //DebugF("psk      :"); Debugln(config.psk);
+  //DebugF("host     :"); Debugln(config.host);
+  //DebugF("ap_psk   :"); Debugln(config.ap_psk);
+  //DebugF("OTA auth :"); Debugln(config.ota_auth);
+  //DebugF("OTA port :"); Debugln(config.ota_port);
+  //DebugF("Config   :");
+  //if (config.config & CFG_RGB_LED) DebugF(" RGB");
+  //if (config.config & CFG_DEBUG)   DebugF(" DEBUG");
+  //if (config.config & CFG_LCD)     DebugF(" LCD");
 
-  DebuglnF("\r\n===== HTTP request"); 
-  DebugF("host     :"); Debugln(config.httpReq.host); 
-  DebugF("port     :"); Debugln(config.httpReq.port); 
-  DebugF("path     :"); Debugln(config.httpReq.path); 
-  DebugF("freq     :"); Debugln(config.httpReq.freq); 
+  //DebuglnF("\r\n===== Emoncms");
+  //DebugF("host     :"); Debugln(config.emoncms.host);
+  //DebugF("port     :"); Debugln(config.emoncms.port);
+  //DebugF("url      :"); Debugln(config.emoncms.url);
+  //DebugF("key      :"); Debugln(config.emoncms.apikey);
+  //DebugF("node     :"); Debugln(config.emoncms.node);
+  //DebugF("freq     :"); Debugln(config.emoncms.freq);
+
+  //DebuglnF("\r\n===== Jeedom");
+  //DebugF("host     :"); Debugln(config.jeedom.host);
+  //DebugF("port     :"); Debugln(config.jeedom.port);
+  //DebugF("url      :"); Debugln(config.jeedom.url);
+  //DebugF("key      :"); Debugln(config.jeedom.apikey);
+  //DebugF("compteur :"); Debugln(config.jeedom.adco);
+  //DebugF("freq     :"); Debugln(config.jeedom.freq);
+
+  //DebuglnF("\r\n===== HTTP request");
+  //DebugF("host     :"); Debugln(config.httpReq.host);
+  //DebugF("port     :"); Debugln(config.httpReq.port);
+  //DebugF("path     :"); Debugln(config.httpReq.path);
+  //DebugF("freq     :"); Debugln(config.httpReq.freq);
 }
 

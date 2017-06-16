@@ -114,6 +114,19 @@ typedef struct
   String sys_uptime;
 } _sysinfo;
 
+// sysinfo informations
+typedef struct
+{
+  String Timestamp;
+  String Message;
+} _tablog;
+
+// weblog data : circular table declared in Wifinfo.ino
+extern const int  logsize;
+extern _tablog Logging[];
+
+extern int logcount;
+
 // Exported variables/object instancied in main sketch
 // ===================================================
 extern ESP8266WebServer server;
@@ -125,6 +138,9 @@ extern _sysinfo sysinfo;
 extern Ticker Tick_emoncms;
 extern Ticker Tick_jeedom;
 extern Ticker Tick_httpRequest;
+extern String ToLog;
+extern String Temp;
+extern char   mano[128];
 
 
 // Exported function located in main sketch
@@ -133,6 +149,7 @@ void ResetConfig(void);
 void Task_emoncms();
 void Task_jeedom();
 void Task_httpRequest();
-
+void putlog(String& str);
+void addLog();
 #endif
 

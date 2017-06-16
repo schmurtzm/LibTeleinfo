@@ -78,6 +78,41 @@ _sysinfo sysinfo;
 // count Wifi connect attempts, to check stability
 int       nb_reconnect = 0;
 
+int logcount = -1;
+const int logsize = 50;
+_tablog Logging[logsize];
+
+String ToLog = "";    //line to be inserted in circular table
+String LastMess = ""; //Last line inserted in table, to don't repeat same messages
+char mano[128];       //used to build formatted messages
+
+
+// Add current message to circular table
+void addLog()
+{
+    if(strcmp(ToLog.c_str(),LastMess.c_str()) != 0) {
+      logcount++;
+      if (logcount >= logsize)  
+        logcount = 0;
+        
+      Logging[logcount].Timestamp = getTimestamp();;
+      Logging[logcount].Message = ToLog;
+      LastMess = ToLog;
+    }
+    Debugln(ToLog);		//Keep debug messages on Serial channel...
+    ToLog = "";
+}
+
+String getTimestamp()
+{
+  char buff[64];
+  int sec = seconds;
+  int min = sec / 60;
+  int hr = min / 60;
+  
+  sprintf_P( buff, PSTR("%d:%02d:%02d"), hr, min % 60, sec % 60);
+  return(buff);
+}
 /* ======================================================================
 Function: UpdateSysinfo 
 Purpose : update sysinfo variables
@@ -228,10 +263,12 @@ void ADPSCallback(uint8_t phase)
 {
   // Monophasé
   if (phase == 0 ) {
-    Debugln(F("ADPS"));
+    ToLog += "ADPS"; addLog();
+    //Debugln(F("ADPS"));
   } else {
-    Debug(F("ADPS Phase "));
-    Debugln('0' + phase);
+    ToLog += "ADPS Phase 0"; ToLog += phase; addLog();
+    //Debug(F("ADPS Phase "));
+    //Debugln('0' + phase);
   }
 }
 
@@ -259,15 +296,15 @@ void DataCallback(ValueList * me, uint8_t flags)
     // Do our job (mainly debug)
     DataCallback(anotherme, anotherflag);
   }
-  Debugf("%02d:",test);
+  //Debugf("%02d:",test);
   */
   // ===========================================
   
 /*
   // Do whatever you want there
-  Debug(me->name);
-  Debug('=');
-  Debug(me->value);
+  //Debug(me->name);
+  //Debug('=');
+  //Debug(me->value);
   
   if ( flags & TINFO_FLAGS_NOTHING ) Debug(F(" Nothing"));
   if ( flags & TINFO_FLAGS_ADDED )   Debug(F(" Added"));
@@ -275,7 +312,7 @@ void DataCallback(ValueList * me, uint8_t flags)
   if ( flags & TINFO_FLAGS_EXIST )   Debug(F(" Exist"));
   if ( flags & TINFO_FLAGS_ALERT )   Debug(F(" Alert"));
 
-  Debugln();
+  //Debugln();
 */
 }
 
@@ -299,7 +336,8 @@ void NewFrame(ValueList * me)
   }
 
   sprintf_P( buff, PSTR("New Frame (%ld Bytes free)"), ESP.getFreeHeap() );
-  Debugln(buff);
+  ToLog += buff; addLog();
+  //Debugln(buff);
 }
 
 /* ======================================================================
@@ -323,7 +361,8 @@ void UpdatedFrame(ValueList * me)
   }
 
   sprintf_P( buff, PSTR("Updated Frame (%ld Bytes free)"), ESP.getFreeHeap() );
-  Debugln(buff);
+  ToLog += buff; addLog();
+  //Debugln(buff);
 
 /*
   // Got at least one ?
@@ -411,20 +450,26 @@ int WifiHandleConn(boolean setup = false)
 {
   int ret = WiFi.status();
 
+  ToLog += "WifiHandleConn() entry..."; addLog();
   if (setup) {
 
-    DebuglnF("========== SDK Saved parameters Start"); 
+  /*
+    ToLog += "========== SDK Saved parameters Start"; addLog();
+    //DebuglnF("========== SDK Saved parameters Start"); 
     WiFi.printDiag(DEBUG_SERIAL);
-    DebuglnF("========== SDK Saved parameters End"); 
-    Debugflush();
-
+    ToLog += "========== SDK Saved parameters End"; addLog();
+    //DebuglnF("========== SDK Saved parameters End"); 
+    //Debugflush();
+  */
     // no correct SSID
     if (!*config.ssid) {
-      DebugF("no Wifi SSID in config, trying to get SDK ones..."); 
+      ToLog += "no Wifi SSID in config, trying to get SDK ones..."; addLog();
+      //DebugF("no Wifi SSID in config, trying to get SDK ones..."); 
 
       // Let's see of SDK one is okay
       if ( WiFi.SSID() == "" ) {
-        DebuglnF("Not found may be blank chip!"); 
+        ToLog += "Not found may be blank chip!"; addLog();
+        //DebuglnF("Not found may be blank chip!"); 
       } else {
         *config.psk = '\0';
 
@@ -435,7 +480,8 @@ int WifiHandleConn(boolean setup = false)
         if (WiFi.psk() != "")
           strcpy(config.psk, WiFi.psk().c_str());
 
-        DebuglnF("found one!"); 
+        ToLog += "found one!"; addLog(); 
+        //DebuglnF("found one!"); 
 
         // save back new config
         saveConfig();
@@ -446,22 +492,27 @@ int WifiHandleConn(boolean setup = false)
     if (*config.ssid) {
       uint8_t timeout ;
 
-      DebugF("Connecting to: "); 
-      Debug(config.ssid);
-      Debugflush();
+      
+      ToLog += "Connecting to: "; ToLog += config.ssid; addLog();
+      //Debug("Connecting to: ");
+      //Debug(config.ssid);
+      //Debugflush();
 
-      // Do wa have a PSK ?
+      // Do we have a PSK ?
       if (*config.psk) {
         // protected network
-        Debug(F(" with key '"));
-        Debug(config.psk);
-        Debug(F("'..."));
-        Debugflush();
+        ToLog += " with key '"; ToLog += config.psk; ToLog += "..."; addLog();
+        
+        //Debug(F(" with key '"));
+        //Debug(config.psk);
+        //Debug(F("'..."));
+        //Debugflush();
         WiFi.begin(config.ssid, config.psk);
       } else {
         // Open network
-        Debug(F("unsecure AP"));
-        Debugflush();
+        ToLog += "unsecure AP"; addLog();
+        //Debug(F("unsecure AP"));
+        //Debugflush();
         WiFi.begin(config.ssid);
       }
 
@@ -483,17 +534,23 @@ int WifiHandleConn(boolean setup = false)
     if (ret == WL_CONNECTED)
     {
       nb_reconnect++;         // increase reconnections count
-      DebuglnF("connected!");
+      ToLog += "connected"; addLog();
+      //DebuglnF("connected!");
       WiFi.mode(WIFI_STA);
 
-      DebugF("IP address   : "); Debugln(WiFi.localIP());
-      DebugF("MAC address  : "); Debugln(WiFi.macAddress());
+      IPAddress ip = WiFi.localIP();
+      sprintf(mano,"%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+      ToLog += "IP address   : "; ToLog += mano; addLog();
+      ToLog += "MAC address  : "; ToLog += WiFi.macAddress(); addLog();
+      //DebugF("IP address   : "); Debugln(WiFi.localIP());
+      //DebugF("MAC address  : "); Debugln(WiFi.macAddress());
     
     // not connected ? start AP
     } else {
       char ap_ssid[32];
-      DebuglnF("Error!");
-      Debugflush();
+      ToLog += "Error"; addLog();
+      //DebuglnF("Error!");
+      //Debugflush();
 
       // STA+AP Mode without connected to STA, autoconnect will search
       // other frequencies while trying to connect, this is causing issue
@@ -504,25 +561,32 @@ int WifiHandleConn(boolean setup = false)
 
       // SSID = hostname
       strcpy(ap_ssid, config.host );
-      DebugF("Switching to AP ");
-      Debugln(ap_ssid);
-      Debugflush();
+      ToLog += "Switching to AP "; ToLog += ap_ssid; 
+      //DebugF("Switching to AP ");
+      //Debugln(ap_ssid);
+      //Debugflush();
 
       // protected network
       if (*config.ap_psk) {
-        DebugF(" with key '");
-        Debug(config.ap_psk);
-        DebuglnF("'");
+        ToLog += " with key '"; ToLog += config.ap_psk; ToLog += "'"; addLog();
+        //DebugF(" with key '");
+        //Debug(config.ap_psk);
+        //DebuglnF("'");
         WiFi.softAP(ap_ssid, config.ap_psk);
       // Open network
       } else {
-        DebuglnF(" with no password");
+        ToLog += " with no password"; addLog();
+        //DebuglnF(" with no password");
         WiFi.softAP(ap_ssid);
       }
       WiFi.mode(WIFI_AP_STA);
 
-      DebugF("IP address   : "); Debugln(WiFi.softAPIP());
-      DebugF("MAC address  : "); Debugln(WiFi.softAPmacAddress());
+      IPAddress ip = WiFi.softAPIP();
+      sprintf(mano,"%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+      ToLog += "IP address   : "; ToLog += mano; addLog();
+      ToLog += "MAC address  : "; ToLog += WiFi.softAPmacAddress(); addLog();
+      //DebugF("IP address   : "); Debugln(WiFi.softAPIP());
+      //DebugF("MAC address  : "); Debugln(WiFi.softAPmacAddress());
     }
 
     // Set OTA parameters
@@ -579,11 +643,13 @@ void setup()
   // note this serial can only transmit, just 
   // enough for debugging purpose
   DEBUG_SERIAL.begin(115200);
-  Debugln(F("\r\n\r\n=============="));
-  Debug(F("WifInfo V"));
-  Debugln(F(WIFINFO_VERSION));
-  Debugln();
-  Debugflush();
+  ToLog += "=============="; addLog();
+  //Debugln(F("\r\n\r\n=============="));
+  ToLog += "WifInfo V"; ToLog += WIFINFO_VERSION; addLog();
+  //Debug(F("WifInfo V"));
+  //Debugln(F(WIFINFO_VERSION));
+  //Debugln();
+  //Debugflush();
 
   // Clear our global flags
   config.config = 0;
@@ -592,34 +658,42 @@ void setup()
   //EEPROM.begin(sizeof(_Config));
   EEPROM.begin(1024);
 
-  DebugF("Config size="); Debug(sizeof(_Config));
-  DebugF(" (emoncms=");   Debug(sizeof(_emoncms));
-  DebugF("  jeedom=");   Debug(sizeof(_jeedom));
-  DebugF("  http request=");   Debug(sizeof(_httpRequest));
-  Debugln(')');
-  Debugflush();
+  ToLog += "Config size="; ToLog += sizeof(_Config); addLog();
+  ToLog += " emoncms=";   ToLog += sizeof(_emoncms); addLog();
+  ToLog += "  jeedom=";   ToLog += sizeof(_jeedom); addLog();
+  ToLog += " http request=";   ToLog += sizeof(_httpRequest); addLog();
+  
+  //DebugF("Config size="); Debug(sizeof(_Config));
+  //DebugF(" (emoncms=");   Debug(sizeof(_emoncms));
+  //DebugF("  jeedom=");   Debug(sizeof(_jeedom));
+  //DebugF("  http request=");   Debug(sizeof(_httpRequest));
+  //Debugln(')');
+  //Debugflush();
 
   // Check File system init 
   if (!SPIFFS.begin())
   {
     // Serious problem
-    DebuglnF("SPIFFS Mount failed");
+    ToLog += "SPIFFS Mount failed"; addLog();
+    //DebuglnF("SPIFFS Mount failed");
   } else {
-   
-    DebuglnF("SPIFFS Mount succesfull");
+    ToLog += "SPIFFS Mount succesfull"; addLog();
+    //DebuglnF("SPIFFS Mount succesfull");
 
     Dir dir = SPIFFS.openDir("/");
     while (dir.next()) {    
       String fileName = dir.fileName();
       size_t fileSize = dir.fileSize();
-      Debugf("FS File: %s, size: %d\n", fileName.c_str(), fileSize);
+      sprintf(mano,"FS File: %s, size: %d", fileName.c_str(), fileSize); ToLog += mano, addLog();
+      //Debugf("FS File: %s, size: %d\n", fileName.c_str(), fileSize);
     }
-    DebuglnF("");
+    //DebuglnF("");
   }
   
   // Read Configuration from EEP
   if (readConfig()) {
-      DebuglnF("Good CRC, not set!");
+      ToLog += "Good CRC, not set!"; addLog();
+      //DebuglnF("Good CRC, not set!");
   } else {
     // Reset Configuration
     ResetConfig();
@@ -629,8 +703,8 @@ void setup()
 
     // Indicate the error in global flags
     config.config |= CFG_BAD_CRC;
-
-    DebuglnF("Reset to default");
+    ToLog += "Reset to default"; addLog();
+    //DebuglnF("Reset to default");
   }
 
   // We'll drive our onboard LED
@@ -644,13 +718,15 @@ void setup()
   // OTA callbacks
   ArduinoOTA.onStart([]() { 
     LedRGBON(COLOR_MAGENTA);
-    DebuglnF("Update Started");
+    ToLog += "Update started..."; addLog();
+    //DebuglnF("Update Started");
     ota_blink = true;
   });
 
   ArduinoOTA.onEnd([]() { 
     LedRGBOFF();
-    DebuglnF("Update finished restarting");
+    ToLog += "Update finished -> restarting"; addLog();
+    //DebuglnF("Update finished restarting");
   });
 
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
@@ -665,12 +741,14 @@ void setup()
 
   ArduinoOTA.onError([](ota_error_t error) {
     LedRGBON(COLOR_RED);
-    Debugf("Update Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) DebuglnF("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) DebuglnF("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) DebuglnF("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) DebuglnF("Receive Failed");
-    else if (error == OTA_END_ERROR) DebuglnF("End Failed");
+    sprintf(mano,"Update Error[%u]: ", error); ToLog += mano; addLog();
+    //Debugf("Update Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) ToLog += "Auth Failed";
+    else if (error == OTA_BEGIN_ERROR) ToLog += "Begin Failed";
+    else if (error == OTA_CONNECT_ERROR) ToLog += "Connect Failed";
+    else if (error == OTA_RECEIVE_ERROR) ToLog += "Receive Failed";
+    else if (error == OTA_END_ERROR) ToLog += "End Failed";
+    addLog();
     ESP.restart(); 
   });
 
@@ -687,6 +765,8 @@ void setup()
   server.on("/wifiscan.json", wifiScanJSON);
   server.on("/factory_reset", handleFactoryReset);
   server.on("/reset", handleReset);
+  server.on("/log.json", LogJSONTable);
+  
 
   // handler for the hearbeat
   server.on("/hb.htm", HTTP_GET, [&](){
@@ -712,7 +792,8 @@ void setup()
       if(upload.status == UPLOAD_FILE_START) {
         uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
         WiFiUDP::stopAll();
-        Debugf("Update: %s\n", upload.filename.c_str());
+        sprintf(mano,"Update: %s\n", upload.filename.c_str()); ToLog += mano; addLog();
+        //Debugf("Update: %s\n", upload.filename.c_str());
         LedRGBON(COLOR_MAGENTA);
         ota_blink = true;
 
@@ -727,15 +808,17 @@ void setup()
           LedRGBOFF();
         }
         ota_blink = !ota_blink;
-        Debug(".");
+        ToLog += "."; 
+        //Debug(".");
         if(Update.write(upload.buf, upload.currentSize) != upload.currentSize) 
           Update.printError(Serial1);
 
       } else if(upload.status == UPLOAD_FILE_END) {
         //true to set the size to the current progress
-        if(Update.end(true)) 
-          Debugf("Update Success: %u\nRebooting...\n", upload.totalSize);
-        else 
+        if(Update.end(true)) { 
+          sprintf(mano,"\r\nUpdate Success: %u --> Rebooting...", upload.totalSize); ToLog+=mano; addLog();
+          //Debugf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        } else 
           Update.printError(Serial1);
 
         LedRGBOFF();
@@ -743,7 +826,8 @@ void setup()
       } else if(upload.status == UPLOAD_FILE_ABORTED) {
         Update.end();
         LedRGBOFF();
-        DebuglnF("Update was aborted");
+        ToLog += "Update was aborted"; addLog();
+        //DebuglnF("Update was aborted");
       }
       delay(0);
     }
@@ -762,7 +846,8 @@ void setup()
   // Display configuration
   showConfig();
 
-  Debugln(F("HTTP server started"));
+  ToLog += "HTTP server started"; addLog();
+  //Debugln(F("HTTP server started"));
 
   // Teleinfo is connected to RXD2 (GPIO13) to 
   // avoid conflict when flashing, this is why

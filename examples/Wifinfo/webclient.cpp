@@ -43,24 +43,29 @@ boolean httpPost(char * host, uint16_t port, char * url)
   //http.begin("http://emoncms.org/input/post.json?node=20&apikey=2f13e4608d411d20354485f72747de7b&json={PAPP:100}");
   //http.begin("emoncms.org", 80, "/input/post.json?node=20&apikey=2f13e4608d411d20354485f72747de7b&json={}"); //HTTP
 
-  Debugf("http%s://%s:%d%s => ", port==443?"s":"", host, port, url);
+  sprintf(mano,"http%s://%s:%d%s => ", port==443?"s":"", host, port, url); ToLog += mano;
+  //Debugf("http%s://%s:%d%s => ", port==443?"s":"", host, port, url);
 
   // start connection and send HTTP header
   int httpCode = http.GET();
   if(httpCode) {
       // HTTP header has been send and Server response header has been handled
-      Debug(httpCode);
-      Debug(" ");
+      ToLog += httpCode;
+      ToLog += " ";
+      //Debug(" ");
       // file found at server
       if(httpCode == 200) {
         String payload = http.getString();
-        Debug(payload);
+        ToLog += payload;
+        //Debug(payload);
         ret = true;
       }
   } else {
-      DebugF("failed!");
+	  ToLog += "failed!"; addLog();
+      //DebugF("failed!");
   }
-  Debugf(" in %d ms\r\n",millis()-start);
+  sprintf(mano," in %d ms\r\n",millis()-start); ToLog += mano; addLog();
+  //Debugf(" in %d ms\r\n",millis()-start);
   return ret;
 }
 

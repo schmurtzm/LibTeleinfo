@@ -35,7 +35,7 @@ extern char response[];
 extern uint16_t response_idx;
 extern int      nb_reconnect;
 
-// declared exported function from route.cpp
+// declared exported function from webserver.cpp
 // ===================================================
 void handleTest(void);
 void handleRoot(void); 
@@ -44,6 +44,7 @@ void handleNotFound(void);
 void tinfoJSONTable(void);
 void getSysJSONData(String & r);
 void sysJSONTable(void);
+void LogJSONTable(void);
 void getConfJSONData(String & r);
 void confJSONTable(void);
 void getSpiffsJSONData(String & r);
