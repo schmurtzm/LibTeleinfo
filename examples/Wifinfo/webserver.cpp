@@ -16,6 +16,8 @@
 //
 // History : V1.00 2015-06-14 - First release
 //
+//   Modified by Doume 2017-06-29 : Try to avoid polluted ListedValues with Triphase counter
+//
 // All text above must be included in any redistribution.
 //
 // **********************************************************************************
@@ -30,6 +32,16 @@ const char FP_QCQ[] PROGMEM = "\":\"";
 const char FP_QCNL[] PROGMEM = "\",\r\n\"";
 const char FP_RESTART[] PROGMEM = "OK, Redémarrage en cours\r\n";
 const char FP_NL[] PROGMEM = "\r\n";
+
+//List of authorized value names in Teleinfo, to detect polluted entries
+const String tabnames[35] = { 
+  "ADCO" , "OPTARIF" , "ISOUSC" , "BASE", "HCHC" , "HCHP",
+   "IMAX" , "IINST" , "PTEC", "PMAX", "PAPP", "HHPHC" , "MOTDETAT" , "PPOT",
+   "IINST1" , "IINST2" , "IINST3", "IMAX1" , "IMAX2" , "IMAX3" , 
+  "EJPHN" , "EJPHPM" , "BBRHCJB" , "BBRHPJB", "BBRHCJW" , "BBRHPJW" , "BBRHCJR" ,
+  "BBRHPJR" , "PEJP" , "DEMAIN" , "ADPS" , "ADIR1", "ADIR2" , "ADIR3"
+  };
+
 
 /* ======================================================================
 Function: formatSize 
@@ -292,26 +304,48 @@ Comments: -
 ====================================================================== */
 void tinfoJSONTable(void)
 {
+   // we're there
+  ESP.wdtFeed();  //Force software wadchog to restart from 0
+
   ValueList * me = tinfo.getList();
   String response = "";
 
   // Just to debug where we are
   Debug(F("Serving /tinfo page...\r\n"));
 
+  if (! me ) //&& first_info_call) 
+  {
+    //Let tinfo such time to build a list....
+    first_info_call=false;
+    unsigned long topdebut = millis();
+    bool expired = false;
+    while (! expired ) {
+      if( (millis() - topdebut ) >= 3000 ) {
+        expired = true;   // 3 seconds delay expired
+      } else {
+        yield();  //Let CPU to other threads
+      }
+    }
+    // continue, hoping list values is now ready
+    me = tinfo.getList();
+  }
+    
   // Got at least one ?
   if (me) {
     uint8_t index=0;
-
+    
+    first_info_call=false;
     boolean first_item = true;
     // Json start
     response += F("[\r\n");
 
     // Loop thru the node
     while (me->next) {
+      index++;
+      //if(index > 17)  //Max number of lines, for a triphase counter
+      //  break;
 
-      // we're there
-      ESP.wdtFeed();
-
+ 
       // go to next node
       me = me->next;
 
@@ -321,48 +355,23 @@ void tinfoJSONTable(void)
       else
         response += F(",\r\n");
 
-/*
-      Debug(F("(")) ;
-      Debug(++index) ;
-      Debug(F(") ")) ;
-
-      if (me->name) Debug(me->name) ;
-      else Debug(F("NULL")) ;
-
-      Debug(F("=")) ;
-
-      if (me->value) Debug(me->value) ;
-      else Debug(F("NULL")) ;
-
-      Debug(F(" '")) ;
-      Debug(me->checksum) ;
-      Debug(F("' ")); 
-
-      // Flags management
-      if ( me->flags) {
-        Debug(F("Flags:0x")); 
-        Debugf("%02X => ", me->flags); 
-        if ( me->flags & TINFO_FLAGS_EXIST)
-          Debug(F("Exist ")) ;
-        if ( me->flags & TINFO_FLAGS_UPDATED)
-          Debug(F("Updated ")) ;
-        if ( me->flags & TINFO_FLAGS_ADDED)
-          Debug(F("New ")) ;
+      if(validate_value_name(me->name)) {
+        //It's a known name : process the entry      
+        response += F("{\"na\":\"");
+        response +=  me->name ;
+        response += F("\", \"va\":\"") ;
+        response += me->value;
+        response += F("\", \"ck\":\"") ;
+        if (me->checksum == '"' || me->checksum == '\\' || me->checksum == '/')
+          response += '\\';
+        response += (char) me->checksum;
+        response += F("\", \"fl\":");
+        response += me->flags ;
+        response += '}' ;
+      } else {
+        //Don't put this line in table : name is corrupted !
+        need_reinit=true;
       }
-
-      Debugln() ;
-*/
-      response += F("{\"na\":\"");
-      response +=  me->name ;
-      response += F("\", \"va\":\"") ;
-      response += me->value;
-      response += F("\", \"ck\":\"") ;
-      if (me->checksum == '"' || me->checksum == '\\' || me->checksum == '/')
-        response += '\\';
-      response += (char) me->checksum;
-      response += F("\", \"fl\":");
-      response += me->flags ;
-      response += '}' ;
 
     }
    // Json end
@@ -375,11 +384,8 @@ void tinfoJSONTable(void)
   Debug(F("sending..."));
   server.send ( 200, "text/json", response );
   Debugln(F("OK!"));
+  yield();  //Let a chance to other threads to work
 }
-
-
-
-
 
 /* ======================================================================
 Function: getSysJSONData 
@@ -419,6 +425,10 @@ void getSysJSONData(String & response)
   }
   response += "{\"na\":\"Nb reconnexions Wifi\",\"va\":\"";
   response += nb_reconnect;
+  response += "\"},\r\n"; 
+  
+  response += "{\"na\":\"Nb initialisations Teleinformation\",\"va\":\"";
+  response += nb_reinit;
   response += "\"},\r\n"; 
   
   response += "{\"na\":\"WifInfo Version\",\"va\":\"" WIFINFO_VERSION "\"},\r\n";
@@ -492,13 +502,34 @@ Comments: -
 void sysJSONTable()
 {
   String response = "";
-  
+
+  ESP.wdtFeed();  //Force software watchdog to restart from 0
   getSysJSONData(response);
 
   // Just to debug where we are
   Debug(F("Serving /system page..."));
   server.send ( 200, "text/json", response );
   Debugln(F("Ok!"));
+  yield();  //Let a chance to other threads to work
+}
+
+/* ======================================================================
+Function: emoncmsJSONTable (added by Doume)
+Purpose : prepare the JSON table needed to fill emoncms server with values
+            some values have been translated, because emoncms only
+            accept numeric values
+Input   : -
+Output  : Teleinfo values translated and filtered
+Comments: -
+====================================================================== */
+void emoncmsJSONTable()
+{
+ 
+  String response = build_emoncms_json(); 
+
+  server.send ( 200, "text/json", response );
+  
+  yield();  //Let a chance to other threads to work
 }
 
 
@@ -558,11 +589,13 @@ Comments: -
 void confJSONTable()
 {
   String response = "";
+  //ESP.wdtFeed();  //Force software watchdog to restart from 0
   getConfJSONData(response);
   // Just to debug where we are
   Debug(F("Serving /config page..."));
   server.send ( 200, "text/json", response );
   Debugln(F("Ok!"));
+  yield();  //Let a chance to other threads to work
 }
 
 /* ======================================================================
@@ -630,8 +663,10 @@ Comments: -
 void spiffsJSONTable()
 {
   String response = "";
+  //ESP.wdtFeed();  //Force software watchdog to restart from 0
   getSpiffsJSONData(response);
   server.send ( 200, "text/json", response );
+  yield();  //Let a chance to other threads to work
 }
 
 /* ======================================================================
@@ -647,6 +682,8 @@ void sendJSON(void)
   ValueList * me = tinfo.getList();
   String response = "";
   
+  ESP.wdtFeed();  //Force software watchdog to restart from 0
+    
   // Got at least one ?
   if (me) {
     // Json start
@@ -658,10 +695,15 @@ void sendJSON(void)
     while (me->next) {
       // go to next node
       me = me->next;
-      response += F(",\"") ;
-      response += me->name ;
-      response += F("\":") ;
-      formatNumberJSON(response, me->value);
+      if(validate_value_name(me->name)) {
+        //It's a known name : process the entry
+        response += F(",\"") ;
+        response += me->name ;
+        response += F("\":") ;
+        formatNumberJSON(response, me->value);
+      } else {
+        need_reinit=true;
+      }
     }
    // Json end
    response += FPSTR(FP_JSON_END) ;
@@ -670,6 +712,7 @@ void sendJSON(void)
     server.send ( 404, "text/plain", "No data" );
   }
   server.send ( 200, "text/json", response );
+  yield();  //Let a chance to other threads to work
 }
 
 
@@ -722,6 +765,7 @@ void wifiScanJSON(void)
   Debug(F("sending..."));
   server.send ( 200, "text/json", response );
   Debugln(F("Ok!"));
+  yield();  //Let a chance to other threads to work
 }
 
 
@@ -849,5 +893,23 @@ void handleNotFound(void)
 
   // Led off
   LedBluOFF();
+}
+/* ======================================================================
+Function: validate_value_name
+Purpose : check if value name is in known range of values....
+Input   : name to check
+Output  : true if OK, false otherwise
+Comments: -
+====================================================================== */
+bool validate_value_name(String name)
+{
+	
+  for (int i=0 ; i < 35; i++ ) {
+    if( (tabnames[i].length() == name.length()) && (tabnames[i] == name) ) {
+      return true;
+    }
+  }
+	return false; //Not an existing name !
+  //return true;
 }
 

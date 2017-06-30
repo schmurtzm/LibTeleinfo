@@ -31,11 +31,18 @@
 
 // Exported variables/object instancied in main sketch
 // ===================================================
-extern char response[];
-extern uint16_t response_idx;
-extern int      nb_reconnect;
+extern char         response[];
+extern uint16_t     response_idx;
+extern int          nb_reconnect;
+extern unsigned int nb_reinit;
+extern bool		      need_reinit;
+extern bool         first_info_call;
 
-// declared exported function from route.cpp
+// Exported function instancied in webclient.cpp
+// =============================================
+extern String build_emoncms_json(void);
+
+// declared exported function from webserver.cpp
 // ===================================================
 void handleTest(void);
 void handleRoot(void); 
@@ -44,6 +51,7 @@ void handleNotFound(void);
 void tinfoJSONTable(void);
 void getSysJSONData(String & r);
 void sysJSONTable(void);
+void emoncmsJSONTable(void);    //Added by Doume
 void getConfJSONData(String & r);
 void confJSONTable(void);
 void getSpiffsJSONData(String & r);
@@ -52,5 +60,6 @@ void sendJSON(void);
 void wifiScanJSON(void);
 void handleFactoryReset(void);
 void handleReset(void);
+bool validate_value_name(String name);
 
 #endif

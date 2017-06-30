@@ -76,7 +76,10 @@ unsigned long seconds = 0;
 _sysinfo sysinfo;
 
 // count Wifi connect attempts, to check stability
-int       nb_reconnect = 0;
+int          nb_reconnect = 0;
+bool	       need_reinit = false;
+unsigned int nb_reinit = 0;
+bool         first_info_call=true;
 
 /* ======================================================================
 Function: UpdateSysinfo 
@@ -681,6 +684,7 @@ void setup()
   server.on("/config_form.json", handleFormConfig);
   server.on("/json", sendJSON);
   server.on("/tinfo.json", tinfoJSONTable);
+  server.on("/emoncms.json", emoncmsJSONTable);
   server.on("/system.json", sysJSONTable);
   server.on("/config.json", confJSONTable);
   server.on("/spiffs.json", spiffsJSONTable);
@@ -774,6 +778,8 @@ void setup()
   #endif
 
   // Init teleinfo
+  need_reinit=false;
+  nb_reinit++;
   tinfo.init();
 
   // Attach the callback we need
@@ -822,7 +828,7 @@ void loop()
 
   //webSocket.loop();
 
-  // Only once task per loop, let system do it own task
+  // Only once task per loop, let system do its own task
   if (task_1_sec) { 
     UpdateSysinfo(false, false); 
     task_1_sec = false; 
@@ -837,14 +843,20 @@ void loop()
     task_httpRequest=false;
   }
 
-  // Handle teleinfo serial
-  if ( Serial.available() ) {
-    // Read Serial and process to tinfo
-    c = Serial.read();
-    //Serial1.print(c);
-    tinfo.process(c);
+  if (need_reinit) {
+    //Some polluted entries have been detected in Teleinfo ListValues
+		need_reinit=false;
+    nb_reinit++;    //account of reinit operations, for system infos
+		tinfo.init();		//Clear ListValues, buffer, and wait for next STX
+  } else {
+	  // Handle teleinfo serial
+	  if ( Serial.available() ) {
+	    // Read Serial and process to tinfo
+	    c = Serial.read();
+	    tinfo.process(c);
   }
 
   //delay(10);
 }
 
+}
