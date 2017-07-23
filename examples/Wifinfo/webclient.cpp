@@ -78,83 +78,89 @@ String build_emoncms_json(void)
 
   ValueList * me = tinfo.getList();
 
-  if (me && me->next) {
+  if (me) {
       // Loop thru the node
       while (me->next) {
-        
-        // go to next node
-        me = me->next;
-        
-        // First item do not add , separator
-        if (first_item)
-          first_item = false;
-        else
-          url += ",";
 
-        if(validate_value_name(me->name)) {
-          url +=  me->name ;
-          url += ":" ;
-  
-          // EMONCMS ne sait traiter que des valeurs numériques, donc ici il faut faire une 
-          // table de mappage, tout à fait arbitraire, mais c"est celle-ci dont je me sers 
-          // depuis mes débuts avec la téléinfo
-          if (!strcmp(me->name, "OPTARIF")) {
-            // L'option tarifaire choisie (Groupe "OPTARIF") est codée sur 4 caractères alphanumériques 
-            /* J'ai pris un nombre arbitraire codé dans l'ordre ci-dessous
-            je mets le 4eme char à 0, trop de possibilités
-            BASE => Option Base. 
-            HC.. => Option Heures Creuses. 
-            EJP. => Option EJP. 
-            BBRx => Option Tempo
-            */
-            char * p = me->value;
+         if(! first_item) 
+          // go to next node
+          me = me->next;
+        
+         if( ! me->free ) {
+                
+             
+            // On first item, do not add , separator
+            if (first_item)
+              first_item = false;
+            else
+              url += ",";
               
-                 if (*p=='B'&&*(p+1)=='A'&&*(p+2)=='S') url += "1";
-            else if (*p=='H'&&*(p+1)=='C'&&*(p+2)=='.') url += "2";
-            else if (*p=='E'&&*(p+1)=='J'&&*(p+2)=='P') url += "3";
-            else if (*p=='B'&&*(p+1)=='B'&&*(p+2)=='R') url += "4";
-            else url +="0";
-          } else if (!strcmp(me->name, "HHPHC")) {
-            // L'horaire heures pleines/heures creuses (Groupe "HHPHC") est codé par un caractère A à Y 
-            // J'ai choisi de prendre son code ASCII
-            int code = *me->value;
-            url += String(code);
-          } else if (!strcmp(me->name, "PTEC")) {
-            // La période tarifaire en cours (Groupe "PTEC"), est codée sur 4 caractères 
-            /* J'ai pris un nombre arbitraire codé dans l'ordre ci-dessous
-            TH.. => Toutes les Heures. 
-            HC.. => Heures Creuses. 
-            HP.. => Heures Pleines. 
-            HN.. => Heures Normales. 
-            PM.. => Heures de Pointe Mobile. 
-            HCJB => Heures Creuses Jours Bleus. 
-            HCJW => Heures Creuses Jours Blancs (White). 
-            HCJR => Heures Creuses Jours Rouges. 
-            HPJB => Heures Pleines Jours Bleus. 
-            HPJW => Heures Pleines Jours Blancs (White). 
-            HPJR => Heures Pleines Jours Rouges. 
-            */
-                 if (!strcmp(me->value, "TH..")) url += "1";
-            else if (!strcmp(me->value, "HC..")) url += "2";
-            else if (!strcmp(me->value, "HP..")) url += "3";
-            else if (!strcmp(me->value, "HN..")) url += "4";
-            else if (!strcmp(me->value, "PM..")) url += "5";
-            else if (!strcmp(me->value, "HCJB")) url += "6";
-            else if (!strcmp(me->value, "HCJW")) url += "7";
-            else if (!strcmp(me->value, "HCJR")) url += "8";
-            else if (!strcmp(me->value, "HPJB")) url += "9";
-            else if (!strcmp(me->value, "HPJW")) url += "10";
-            else if (!strcmp(me->value, "HPJR")) url += "11";
-            else url +="0";
-          } else {
-            url += me->value;
-          }
-        } else {
-          //Value name not valid : ignore this value, and
-          //  force Teleinfo to reinit on next loop !
-          need_reinit=true;
-        }
-      } // While me
+            
+            if(validate_value_name(me->name)) {
+              url +=  me->name ;
+              url += ":" ;
+      
+              // EMONCMS ne sait traiter que des valeurs numériques, donc ici il faut faire une 
+              // table de mappage, tout à fait arbitraire, mais c"est celle-ci dont je me sers 
+              // depuis mes débuts avec la téléinfo
+              if (!strcmp(me->name, "OPTARIF")) {
+                // L'option tarifaire choisie (Groupe "OPTARIF") est codée sur 4 caractères alphanumériques 
+                /* J'ai pris un nombre arbitraire codé dans l'ordre ci-dessous
+                je mets le 4eme char à 0, trop de possibilités
+                BASE => Option Base. 
+                HC.. => Option Heures Creuses. 
+                EJP. => Option EJP. 
+                BBRx => Option Tempo
+                */
+                char * p = me->value;
+                  
+                     if (*p=='B'&&*(p+1)=='A'&&*(p+2)=='S') url += "1";
+                else if (*p=='H'&&*(p+1)=='C'&&*(p+2)=='.') url += "2";
+                else if (*p=='E'&&*(p+1)=='J'&&*(p+2)=='P') url += "3";
+                else if (*p=='B'&&*(p+1)=='B'&&*(p+2)=='R') url += "4";
+                else url +="0";
+              } else if (!strcmp(me->name, "HHPHC")) {
+                // L'horaire heures pleines/heures creuses (Groupe "HHPHC") est codé par un caractère A à Y 
+                // J'ai choisi de prendre son code ASCII
+                int code = *me->value;
+                url += String(code);
+              } else if (!strcmp(me->name, "PTEC")) {
+                // La période tarifaire en cours (Groupe "PTEC"), est codée sur 4 caractères 
+                /* J'ai pris un nombre arbitraire codé dans l'ordre ci-dessous
+                TH.. => Toutes les Heures. 
+                HC.. => Heures Creuses. 
+                HP.. => Heures Pleines. 
+                HN.. => Heures Normales. 
+                PM.. => Heures de Pointe Mobile. 
+                HCJB => Heures Creuses Jours Bleus. 
+                HCJW => Heures Creuses Jours Blancs (White). 
+                HCJR => Heures Creuses Jours Rouges. 
+                HPJB => Heures Pleines Jours Bleus. 
+                HPJW => Heures Pleines Jours Blancs (White). 
+                HPJR => Heures Pleines Jours Rouges. 
+                */
+                     if (!strcmp(me->value, "TH..")) url += "1";
+                else if (!strcmp(me->value, "HC..")) url += "2";
+                else if (!strcmp(me->value, "HP..")) url += "3";
+                else if (!strcmp(me->value, "HN..")) url += "4";
+                else if (!strcmp(me->value, "PM..")) url += "5";
+                else if (!strcmp(me->value, "HCJB")) url += "6";
+                else if (!strcmp(me->value, "HCJW")) url += "7";
+                else if (!strcmp(me->value, "HCJR")) url += "8";
+                else if (!strcmp(me->value, "HPJB")) url += "9";
+                else if (!strcmp(me->value, "HPJW")) url += "10";
+                else if (!strcmp(me->value, "HPJR")) url += "11";
+                else url +="0";
+              } else {
+                url += me->value;
+              }
+            } else {
+              //Value name not valid : ignore this value, and
+              //  force Teleinfo to reinit on next loop !
+              need_reinit=true;
+            }
+         } //not free entry
+      } // While next
 
   } //if me
   // Json end

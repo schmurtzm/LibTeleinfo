@@ -18,6 +18,15 @@
 //
 // All text above must be included in any redistribution.
 //
+// Modifié par Dominique DAMBRAIN 2017-07-10 (http://www.dambrain.fr)
+//       Version 1.0.5
+//       Librairie LibTeleInfo : Allocation statique d'un tableau de stockage 
+//           des variables (50 entrées) afin de proscrire les malloc/free
+//           pour éviter les altérations des noms & valeurs
+//       Modification en conséquence des séquences de scanning du tableau
+//       ATTENTION : Nécessite probablement un ESP-8266 type Wemos D1,
+//        car les variables globales occupent 42.284 octets
+//
 // **********************************************************************************
 // Include Arduino header
 #include <Arduino.h>
@@ -80,6 +89,16 @@ int          nb_reconnect = 0;
 bool	       need_reinit = false;
 unsigned int nb_reinit = 0;
 bool         first_info_call=true;
+
+#ifdef SIMU
+//for tests
+uint8_t flags = 8;
+int loop_cpt = 60000;
+String name2 = "HCHC";
+char * s2 = (char *)name2.c_str();
+String value2 = "000060000";
+char * v2 = (char *) value2.c_str();
+#endif
 
 /* ======================================================================
 Function: UpdateSysinfo 
@@ -301,8 +320,8 @@ void NewFrame(ValueList * me)
     rgb_ticker.once_ms( (uint32_t) BLINK_LED_MS, LedOff, (int) RGB_LED_PIN);
   }
 
-  sprintf_P( buff, PSTR("New Frame (%ld Bytes free)"), ESP.getFreeHeap() );
-  Debugln(buff);
+  //sprintf_P( buff, PSTR("New Frame (%ld Bytes free)"), ESP.getFreeHeap() );
+  //Debugln(buff);
 }
 
 /* ======================================================================
@@ -325,8 +344,8 @@ void UpdatedFrame(ValueList * me)
     rgb_ticker.once_ms(BLINK_LED_MS, LedOff, RGB_LED_PIN);
   }
 
-  sprintf_P( buff, PSTR("Updated Frame (%ld Bytes free)"), ESP.getFreeHeap() );
-  Debugln(buff);
+  //sprintf_P( buff, PSTR("Updated Frame (%ld Bytes free)"), ESP.getFreeHeap() );
+  //Debugln(buff);
 
 /*
   // Got at least one ?
@@ -779,7 +798,6 @@ void setup()
 
   // Init teleinfo
   need_reinit=false;
-  nb_reinit++;
   tinfo.init();
 
   // Attach the callback we need
@@ -809,6 +827,21 @@ void setup()
   // HTTP Request Update if needed
   if (config.httpReq.freq) 
     Tick_httpRequest.attach(config.httpReq.freq, Task_httpRequest);
+
+//To simulate Teleinfo on not connected module
+#ifdef SIMU
+    String name1 = "ADCO";
+    String value1 = "01234546789012";
+    
+    char * s1 = (char *)name1.c_str();
+    char * v1 = (char *)value1.c_str();
+    flags = TINFO_FLAGS_ADDED;
+    tinfo.addCustomValue(s1, v1, &flags); //ADCO arbitrary value
+    tinfo.addCustomValue(s2, v2, &flags); //counter value
+    flags = TINFO_FLAGS_NONE;
+    tinfo.valuesDump();
+#endif
+
 }
 
 /* ======================================================================
@@ -832,6 +865,21 @@ void loop()
   if (task_1_sec) { 
     UpdateSysinfo(false, false); 
     task_1_sec = false; 
+    
+//To simulate Teleinfo on not connected module
+#ifdef SIMU
+    loop_cpt++;
+    if(loop_cpt % 10)
+    {
+      // each 10 second, try to change HCHC value
+      //Increase v2 value
+      sprintf(v2, "%09d", (loop_cpt) );
+      // and update ListValues
+      flags = TINFO_FLAGS_UPDATED;
+      tinfo.addCustomValue(s2, v2, &flags);   
+    }
+#endif
+
   } else if (task_emoncms) { 
     emoncmsPost(); 
     task_emoncms=false; 

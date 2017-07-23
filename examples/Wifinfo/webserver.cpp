@@ -329,7 +329,7 @@ void tinfoJSONTable(void)
     // continue, hoping list values is now ready
     me = tinfo.getList();
   }
-    
+  //tinfo.valuesDump(); 
   // Got at least one ?
   if (me) {
     uint8_t index=0;
@@ -342,35 +342,37 @@ void tinfoJSONTable(void)
     // Loop thru the node
     while (me->next) {
       index++;
-      //if(index > 17)  //Max number of lines, for a triphase counter
-      //  break;
+
+      if(! first_item) 
+        // go to next node
+        me = me->next;
 
  
-      // go to next node
-      me = me->next;
 
-      // First item do not add , separator
-      if (first_item)
-        first_item = false;
-      else
-        response += F(",\r\n");
-
-      if(validate_value_name(me->name)) {
-        //It's a known name : process the entry      
-        response += F("{\"na\":\"");
-        response +=  me->name ;
-        response += F("\", \"va\":\"") ;
-        response += me->value;
-        response += F("\", \"ck\":\"") ;
-        if (me->checksum == '"' || me->checksum == '\\' || me->checksum == '/')
-          response += '\\';
-        response += (char) me->checksum;
-        response += F("\", \"fl\":");
-        response += me->flags ;
-        response += '}' ;
-      } else {
-        //Don't put this line in table : name is corrupted !
-        need_reinit=true;
+      if( ! me->free ) {
+        // First item do not add , separator
+        if (first_item)
+          first_item = false;
+        else 
+          response += F(",\r\n");
+          
+        if(validate_value_name(me->name)) {
+          //It's a known name : process the entry      
+          response += F("{\"na\":\"");
+          response +=  me->name ;
+          response += F("\", \"va\":\"") ;
+          response += me->value;
+          response += F("\", \"ck\":\"") ;
+          if (me->checksum == '"' || me->checksum == '\\' || me->checksum == '/')
+            response += '\\';
+          response += (char) me->checksum;
+          response += F("\", \"fl\":");
+          response += me->flags ;
+          response += '}' ;
+        } else {
+          //Don't put this line in table : name is corrupted !
+          need_reinit=true;
+        }
       }
 
     }
@@ -383,6 +385,7 @@ void tinfoJSONTable(void)
   }
   Debug(F("sending..."));
   server.send ( 200, "text/json", response );
+  //Debugln(response);
   Debugln(F("OK!"));
   yield();  //Let a chance to other threads to work
 }
@@ -427,7 +430,7 @@ void getSysJSONData(String & response)
   response += nb_reconnect;
   response += "\"},\r\n"; 
   
-  response += "{\"na\":\"Nb initialisations Teleinformation\",\"va\":\"";
+  response += "{\"na\":\"Altérations Data détectées\",\"va\":\"";
   response += nb_reinit;
   response += "\"},\r\n"; 
   
@@ -524,11 +527,12 @@ Comments: -
 ====================================================================== */
 void emoncmsJSONTable()
 {
- 
+  Debug(F("Serving /emoncms.json page..."));
   String response = build_emoncms_json(); 
 
   server.send ( 200, "text/json", response );
-  
+  //Debugln(response);
+  Debugln(F("Ok!"));
   yield();  //Let a chance to other threads to work
 }
 
@@ -679,11 +683,13 @@ Comments: -
 ====================================================================== */
 void sendJSON(void)
 {
+  boolean first_item = true;
   ValueList * me = tinfo.getList();
   String response = "";
   
   ESP.wdtFeed();  //Force software watchdog to restart from 0
-    
+
+  Debug(F("Serving /json page..."));
   // Got at least one ?
   if (me) {
     // Json start
@@ -693,18 +699,25 @@ void sendJSON(void)
 
     // Loop thru the node
     while (me->next) {
-      // go to next node
-      me = me->next;
-      if(validate_value_name(me->name)) {
-        //It's a known name : process the entry
-        response += F(",\"") ;
-        response += me->name ;
-        response += F("\":") ;
-        formatNumberJSON(response, me->value);
-      } else {
-        need_reinit=true;
-      }
-    }
+      if(! first_item) 
+          // go to next node
+          me = me->next;
+        
+      if( ! me->free ) {
+        if (first_item)
+            first_item = false;
+          
+        if(validate_value_name(me->name)) {
+          //It's a known name : process the entry
+          response += F(",\"") ;
+          response += me->name ;
+          response += F("\":") ;
+          formatNumberJSON(response, me->value);
+        } else {
+          need_reinit=true;
+        } // name validity
+      } //free entry
+    } //while
    // Json end
    response += FPSTR(FP_JSON_END) ;
 
@@ -712,6 +725,8 @@ void sendJSON(void)
     server.send ( 404, "text/plain", "No data" );
   }
   server.send ( 200, "text/json", response );
+  //Debugln(response);
+  Debugln(F("Ok!"));
   yield();  //Let a chance to other threads to work
 }
 
