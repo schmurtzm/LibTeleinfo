@@ -46,13 +46,13 @@ extern "C" {
 #include "config.h"
 
 // Declare SIMU to work and test a non connected module
-//#define SIMU
+#define SIMU
 
 #define DEBUG
 #define DEBUG_SERIAL	Serial1
 #define DEBUG_SERIAL1	
 
-#define WIFINFO_VERSION "1.0.5"
+#define WIFINFO_VERSION "1.0.5a"
 
 // I prefix debug macro to be sure to use specific for THIS library
 // debugging, this should not interfere with main sketch or other 
