@@ -207,5 +207,6 @@ void showConfig()
   DebugF("port     :"); Debugln(config.httpReq.port); 
   DebugF("path     :"); Debugln(config.httpReq.path); 
   DebugF("freq     :"); Debugln(config.httpReq.freq); 
+  DebugF("sw idx   :"); Debugln(config.httpReq.swidx); 
 }
 

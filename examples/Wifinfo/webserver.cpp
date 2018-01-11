@@ -209,6 +209,12 @@ void handleFormConfig(void)
     }
     config.httpReq.freq = itemp;
 
+    itemp = server.arg("httpreq_swidx").toInt();
+    if (itemp > 0 && itemp <= 65535)
+      config.httpReq.swidx = itemp;
+    else
+      config.httpReq.swidx = 0;
+
     if ( saveConfig() ) {
       ret = 200;
       response = "OK";
@@ -311,7 +317,7 @@ void tinfoJSONTable(void)
   String response = "";
 
   // Just to debug where we are
-  Debug(F("Serving /tinfo page...\r\n"));
+  //Debug(F("Serving /tinfo page...\r\n"));
 
   if (! me ) //&& first_info_call) 
   {
@@ -383,10 +389,10 @@ void tinfoJSONTable(void)
     Debugln(F("sending 404..."));
     server.send ( 404, "text/plain", "No data" );
   }
-  Debug(F("sending..."));
+  //Debug(F("sending..."));
   server.send ( 200, "text/json", response );
   //Debugln(response);
-  Debugln(F("OK!"));
+  //Debugln(F("OK!"));
   yield();  //Let a chance to other threads to work
 }
 
@@ -409,7 +415,17 @@ void getSysJSONData(String & response)
   response += "{\"na\":\"Uptime\",\"va\":\"";
   response += sysinfo.sys_uptime;
   response += "\"},\r\n";
-
+  
+#ifdef SENSOR
+  response += "{\"na\":\"Switch\",\"va\":\"";
+  if (SwitchState) 
+    response += F("Open");  //switch ouvert
+  else
+    response += F("Closed");  //switch fermé
+    
+  response += "\"},\r\n";  
+#endif
+  
   if (WiFi.status() == WL_CONNECTED)
   {
       response += "{\"na\":\"Wifi RSSI\",\"va\":\"";
@@ -510,9 +526,9 @@ void sysJSONTable()
   getSysJSONData(response);
 
   // Just to debug where we are
-  Debug(F("Serving /system page..."));
+  //Debug(F("Serving /system page..."));
   server.send ( 200, "text/json", response );
-  Debugln(F("Ok!"));
+  //Debugln(F("Ok!"));
   yield();  //Let a chance to other threads to work
 }
 

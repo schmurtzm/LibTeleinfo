@@ -40,6 +40,7 @@ boolean httpPost(char * host, uint16_t port, char * url);
 boolean emoncmsPost(void);
 boolean jeedomPost(void);
 boolean httpRequest(void);
+boolean UPD_switch(void);
 String  build_emoncms_json(void);
 
 #endif

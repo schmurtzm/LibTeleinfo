@@ -37,6 +37,7 @@ extern int          nb_reconnect;
 extern unsigned int nb_reinit;
 extern bool		      need_reinit;
 extern bool         first_info_call;
+extern int          SwitchState;
 
 // Exported function instancied in webclient.cpp
 // =============================================

@@ -27,6 +27,15 @@
 //       ATTENTION : Nécessite probablement un ESP-8266 type Wemos D1,
 //        car les variables globales occupent 42.284 octets
 //
+//       Version 1.0.5a (11/01/2018)
+//       Permettre la mise à jour OTA à partir de fichiers .ino.bin (Auduino IDE 1.8.3)
+//       Ajout de la gestion d'un switch (Contact sec) relié à GND et D5 (GPIO-14)
+//          Décommenter le #define SENSOR dans Winfo.h
+//          Pour être utilisable avec Domoticz, au moins l'URL du serveur et le port
+//          doivent être renseignés dans la configuration HTTP Request, ainsi que 
+//          l'index du switch (dans Domoticz)
+//       Note : Nécessité de flasher le SPIFFS pour pouvoir configurer l'IDX du switch
+//
 // **********************************************************************************
 // Include Arduino header
 #include <Arduino.h>
@@ -79,6 +88,7 @@ volatile boolean task_1_sec = false;
 volatile boolean task_emoncms = false;
 volatile boolean task_jeedom = false;
 volatile boolean task_httpRequest = false;
+volatile boolean task_updsw = false;
 unsigned long seconds = 0;
 
 // sysinfo data
@@ -98,6 +108,16 @@ String name2 = "HCHC";
 char * s2 = (char *)name2.c_str();
 String value2 = "000060000";
 char * v2 = (char *) value2.c_str();
+#endif
+
+#ifdef SENSOR
+// Le contact sec devra etre connecte entre GND et D5 (GPIO-14)
+const int   SensorPin = 14; 
+int         reading ;  
+int         SwitchState;             // the current reading from the input pin
+int         lastSwitchState = LOW;   // the previous reading from the input pin
+unsigned long lastChangeTime = 0;  // the last time the input pin was toggled
+unsigned long tempo = 200;    // temps necessaire a la stabilisation du switch (0,2 seconde)
 #endif
 
 /* ======================================================================
@@ -672,7 +692,7 @@ void setup()
 
   ArduinoOTA.onEnd([]() { 
     LedRGBOFF();
-    DebuglnF("Update finished restarting");
+    DebuglnF("Update finished : restarting");
   });
 
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
@@ -789,7 +809,7 @@ void setup()
 
   // Teleinfo is connected to RXD2 (GPIO13) to 
   // avoid conflict when flashing, this is why
-  // we swap RXD1/RXD1 to RXD2/TXD2 
+  // we swap RXD1/TXD1 to RXD2/TXD2 
   // Note that TXD2 is not used teleinfo is receive only
   #ifdef DEBUG_SERIAL1
     Serial.begin(1200, SERIAL_7E1);
@@ -842,6 +862,13 @@ void setup()
     tinfo.valuesDump();
 #endif
 
+#ifdef SENSOR
+  pinMode(SensorPin, INPUT_PULLUP);
+  DebuglnF("Switch sensor initialized");
+  reading = digitalRead(SensorPin);
+  Debugf("Initial State: %d\n", reading);
+#endif
+
 }
 
 /* ======================================================================
@@ -889,7 +916,40 @@ void loop()
   } else if (task_httpRequest) { 
     httpRequest();  
     task_httpRequest=false;
+  } else if (task_updsw) { 
+    UPD_switch();  
+    task_updsw=false;
   }
+  
+  
+#ifdef SENSOR
+ // read the state of the switch into a local variable:
+  reading = digitalRead(SensorPin);
+
+  // check to see if you just pressed the button
+  // (i.e. the input went from LOW to HIGH), and you've waited long enough
+  // since the last press to ignore any noise:
+
+  // If the switch changed, due to noise or pressing:
+  if (reading != lastSwitchState) {
+    // reset the debouncing timer
+    lastChangeTime = millis();
+    lastSwitchState = reading;
+  }
+
+  if ((millis() - lastChangeTime) > tempo) {
+    // whatever the reading is at, it's been there for longer than the tempo
+    // delay, so take it as the actual current state:
+
+    // if the switch state has changed:
+    if (reading != SwitchState) {
+      Debugf("Switch changed from  %d to %d\n", SwitchState, reading);
+      SwitchState = reading;
+      //Notify HTTP server that switch has changed, on next loop
+      task_updsw=true;
+    }
+  }
+#endif
 
   if (need_reinit) {
     //Some polluted entries have been detected in Teleinfo ListValues

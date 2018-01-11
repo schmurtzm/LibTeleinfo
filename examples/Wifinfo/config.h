@@ -128,9 +128,10 @@ typedef struct
 {
   char  host[CFG_HTTPREQ_HOST_SIZE+1];  // FQDN 
   char  path[CFG_HTTPREQ_PATH_SIZE+1];  // Path
-  uint16_t port;                        // Protocol port (HTTP/HTTPS)
+  uint16_t port;                        // Protocol port (HTTP/HTTPS) 
   uint32_t freq;                        // refresh rate
-  uint8_t filler[24];                   // in case adding data in config avoiding loosing current conf by bad crc*/
+  uint16_t swidx;                       // Switch index (into Domoticz)
+  uint8_t filler[22];                   // in case adding data in config avoiding loosing current conf by bad crc*/
 } _httpRequest;
 
 // Config saved into eeprom

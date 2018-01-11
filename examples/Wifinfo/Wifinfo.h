@@ -49,8 +49,18 @@ extern "C" {
 #define SIMU
 
 #define DEBUG
+
+#define SENSOR
+
+// En mode SIMU, cela signifie que rien n'est connecté au port Serial
+// On peut donc laisser le debug sur ce port, pour beneficier de
+// l'affichage via Arduino IDE
+#ifdef SIMU
+#define DEBUG_SERIAL	Serial
+#else
 #define DEBUG_SERIAL	Serial1
-#define DEBUG_SERIAL1	
+#define DEBUG_SERIAL1
+#endif
 
 #define WIFINFO_VERSION "1.0.5a"
 

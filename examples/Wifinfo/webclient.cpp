@@ -1,5 +1,5 @@
 // **********************************************************************************
-// ESP8266 Teleinfo WEB Client, web server function
+// ESP8266 Teleinfo WEB Client, web client functions
 // **********************************************************************************
 // Creative Commons Attrib Share-Alike License
 // You are free to use/extend this library but please abide with the CC-BY-SA license:
@@ -368,6 +368,40 @@ boolean httpRequest(void)
       ret = httpPost( config.httpReq.host, config.httpReq.port, (char *) url.c_str()) ;
     } // if me
   } // if host
+  return ret;
+}
+
+/* ======================================================================
+Function: UPD_switch
+Purpose : Do a http request to update Switch state into Domoticz
+Input   : 
+Output  : true if post returned 200 OK
+Comments: -
+====================================================================== */
+boolean UPD_switch(void)
+{
+  boolean ret = false;
+
+  // Some basic checking
+  if (*config.httpReq.host && (config.httpReq.swidx != 0) )
+  {
+      char url[128]; 
+      char State[5];
+      uint16_t port = config.httpReq.port;
+
+      if(port == 0)
+        port = 80;
+
+      if(SwitchState)
+        sprintf(State,"Off");  //switch ouvert
+      else
+        sprintf(State,"On");   //switch fermé : portail fermé 
+
+      sprintf(url,"/json.htm?type=command&param=switchlight&idx=%d&switchcmd=%s",(int)config.httpReq.swidx, State);
+      //Debugf("Updating switch: <%s>\n",  url );
+      ret = httpPost( config.httpReq.host, port, url) ;
+   
+  } // if host & idx
   return ret;
 }
 
