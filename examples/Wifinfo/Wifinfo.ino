@@ -34,6 +34,8 @@
 //          Pour être utilisable avec Domoticz, au moins l'URL du serveur et le port
 //          doivent être renseignés dans la configuration HTTP Request, ainsi que 
 //          l'index du switch (dans Domoticz)
+//          L'état du switch (On/Off) est envoyé à Domoticz au boot, et à chaque
+//            changement d'état
 //       Note : Nécessité de flasher le SPIFFS pour pouvoir configurer l'IDX du switch
 //
 // **********************************************************************************
@@ -56,6 +58,10 @@
 
 // Global project file
 #include "Wifinfo.h"
+/*
+#include "StringStream.h"
+#include "PString.h"
+*/
 
 //WiFiManager wifi(0);
 ESP8266WebServer server(80);
@@ -114,11 +120,55 @@ char * v2 = (char *) value2.c_str();
 // Le contact sec devra etre connecte entre GND et D5 (GPIO-14)
 const int   SensorPin = 14; 
 int         reading ;  
-int         SwitchState;             // the current reading from the input pin
-int         lastSwitchState = LOW;   // the previous reading from the input pin
+int         SwitchState = -1;       // the current reading from the input pin
+int         lastSwitchState = -1;   // the previous reading from the input pin
 unsigned long lastChangeTime = 0;  // the last time the input pin was toggled
 unsigned long tempo = 200;    // temps necessaire a la stabilisation du switch (0,2 seconde)
 #endif
+
+/*
+char logbuffer[255];
+PString flogger(logbuffer, sizeof(logbuffer));
+*/
+
+/* ======================================================================
+Function: write_log 
+Purpose : Ecrire buffer de log sur filesystem SPIFFS, par paquets
+Input   : -
+Output  : - 
+Comments: -
+====================================================================== 
+void write_log()
+{
+  if(SPIFFS.begin())
+  {
+   //Changer de fichier si > MAX_SIZE
+  File log = SPIFFS.open("/log.txt", "r");
+  if(log)
+  {
+    if (log.size() >= 50000)
+    {
+        log.close();
+        if (SPIFFS.exists("/log.1"))
+        {
+          SPIFFS.remove("/log.1");
+        }
+        SPIFFS.rename("/log.txt","/log.1");
+      } else {
+        log.close();
+    }
+  }
+   
+   // Ouvre fichier 
+  File out = SPIFFS.open("/log.txt", "a+");
+  if (out) {
+      out.print(logbuffer);
+      flogger.begin();
+  }
+  out.close();
+  }
+}
+*/
 
 /* ======================================================================
 Function: UpdateSysinfo 

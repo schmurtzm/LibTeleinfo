@@ -69,6 +69,7 @@
 #define CFG_FORM_AP_PSK   FPSTR("ap_psk")
 #define CFG_FORM_OTA_AUTH FPSTR("ota_auth")
 #define CFG_FORM_OTA_PORT FPSTR("ota_port")
+#define CFG_FORM_DBGFILE  FPSTR("dbg_file")
 
 #define CFG_FORM_EMON_HOST  FPSTR("emon_host")
 #define CFG_FORM_EMON_PORT  FPSTR("emon_port")
@@ -88,6 +89,7 @@
 #define CFG_FORM_HTTPREQ_PORT  FPSTR("httpreq_port")
 #define CFG_FORM_HTTPREQ_PATH  FPSTR("httpreq_path")
 #define CFG_FORM_HTTPREQ_FREQ  FPSTR("httpreq_freq")
+#define CFG_FORM_HTTPREQ_SWIDX FPSTR("httpreq_swidx")
 
 #define CFG_FORM_IP  FPSTR("wifi_ip");
 #define CFG_FORM_GW  FPSTR("wifi_gw");
@@ -145,7 +147,8 @@ typedef struct
   char  ota_auth[CFG_PSK_SIZE+1];  // OTA Authentication password
   uint32_t config;           		   // Bit field register 
   uint16_t ota_port;         		   // OTA port 
-  uint8_t  filler[131];      		   // in case adding data in config avoiding loosing current conf by bad crc
+  boolean  dbgfile;                 // true if debug on SPIFFS required
+  uint8_t  filler[130];      		   // in case adding data in config avoiding loosing current conf by bad crc
   _emoncms emoncms;                // Emoncms configuration
   _jeedom  jeedom;                 // jeedom configuration
   _httpRequest httpReq;            // HTTP request

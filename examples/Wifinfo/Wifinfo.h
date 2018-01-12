@@ -64,6 +64,9 @@ extern "C" {
 
 #define WIFINFO_VERSION "1.0.5a"
 
+// voir : https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr/cores/arduino
+// le Serial.print sous toutes ses formes....
+
 // I prefix debug macro to be sure to use specific for THIS library
 // debugging, this should not interfere with main sketch or other 
 // libraries

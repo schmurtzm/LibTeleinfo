@@ -181,10 +181,12 @@ void showConfig()
   DebugF("ap_psk   :"); Debugln(config.ap_psk); 
   DebugF("OTA auth :"); Debugln(config.ota_auth); 
   DebugF("OTA port :"); Debugln(config.ota_port); 
+  DebugF("Dbg/file :"); Debugln(config.dbgfile); 
   DebugF("Config   :"); 
   if (config.config & CFG_RGB_LED) DebugF(" RGB"); 
   if (config.config & CFG_DEBUG)   DebugF(" DEBUG"); 
   if (config.config & CFG_LCD)     DebugF(" LCD"); 
+ 
 
   DebuglnF("\r\n===== Emoncms"); 
   DebugF("host     :"); Debugln(config.emoncms.host); 

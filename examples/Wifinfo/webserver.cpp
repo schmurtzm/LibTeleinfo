@@ -158,7 +158,11 @@ void handleFormConfig(void)
     strncpy(config.ota_auth,server.arg("ota_auth").c_str(), CFG_PSK_SIZE );
     itemp = server.arg("ota_port").toInt();
     config.ota_port = (itemp>=0 && itemp<=65535) ? itemp : DEFAULT_OTA_PORT ;
-
+    if(server.arg("dbg_file").toInt() == 1)
+      config.dbgfile=true;
+    else
+      config.dbgfile=false;
+      
     // Emoncms
     strncpy(config.emoncms.host,   server.arg("emon_host").c_str(),  CFG_EMON_HOST_SIZE );
     strncpy(config.emoncms.url,    server.arg("emon_url").c_str(),   CFG_EMON_URL_SIZE );
@@ -579,6 +583,7 @@ void getConfJSONData(String & r)
   r+=CFG_FORM_EMON_FREQ; r+=FPSTR(FP_QCQ); r+=config.emoncms.freq;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_OTA_AUTH;  r+=FPSTR(FP_QCQ); r+=config.ota_auth;       r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_OTA_PORT;  r+=FPSTR(FP_QCQ); r+=config.ota_port;       r+= FPSTR(FP_QCNL);
+  r+=CFG_FORM_DBGFILE;   r+=FPSTR(FP_QCQ); r+=config.dbgfile;        r+= FPSTR(FP_QCNL);
 
   r+=CFG_FORM_JDOM_HOST; r+=FPSTR(FP_QCQ); r+=config.jeedom.host;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_JDOM_PORT; r+=FPSTR(FP_QCQ); r+=config.jeedom.port;   r+= FPSTR(FP_QCNL); 
@@ -590,7 +595,8 @@ void getConfJSONData(String & r)
   r+=CFG_FORM_HTTPREQ_HOST; r+=FPSTR(FP_QCQ); r+=config.httpReq.host;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_HTTPREQ_PORT; r+=FPSTR(FP_QCQ); r+=config.httpReq.port;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_HTTPREQ_PATH; r+=FPSTR(FP_QCQ); r+=config.httpReq.path;   r+= FPSTR(FP_QCNL);  
-  r+=CFG_FORM_HTTPREQ_FREQ; r+=FPSTR(FP_QCQ); r+=config.httpReq.freq;  
+  r+=CFG_FORM_HTTPREQ_FREQ; r+=FPSTR(FP_QCQ); r+=config.httpReq.freq;   r+= FPSTR(FP_QCNL);   
+  r+=CFG_FORM_HTTPREQ_SWIDX; r+=FPSTR(FP_QCQ); r+=config.httpReq.swidx;  
   
 
   r+= F("\""); 
