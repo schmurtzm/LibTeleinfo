@@ -54,7 +54,7 @@ extern "C" {
 //#define DEBUG
 
 //Décommenter SENSOR pour compiler une  version capable de gérer
-//  un contcat sec connecté entre Ground et D4
+//  un contact sec connecté entre Ground et D4
 //#define SENSOR
 
 // En mode SIMU, cela signifie que rien n'est connecté au port Serial
