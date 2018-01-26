@@ -29,6 +29,7 @@
 // Exported variables/object instancied in main sketch
 // ===================================================
 extern bool          need_reinit;
+extern char          buff[];
 
 // Exported function instancied in webserver.cpp
 // =============================================

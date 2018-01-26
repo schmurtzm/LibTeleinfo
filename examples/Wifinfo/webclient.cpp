@@ -43,7 +43,8 @@ boolean httpPost(char * host, uint16_t port, char * url)
   //http.begin("http://emoncms.org/input/post.json?node=20&apikey=2f13e4608d411d20354485f72747de7b&json={PAPP:100}");
   //http.begin("emoncms.org", 80, "/input/post.json?node=20&apikey=2f13e4608d411d20354485f72747de7b&json={}"); //HTTP
 
-  Debugf("http%s://%s:%d%s => ", port==443?"s":"", host, port, url);
+  sprintf(buff,"http%s://%s:%d%s => ", port==443?"s":"", host, port, url);
+  Debug(buff);
 
   // start connection and send HTTP header
   int httpCode = http.GET();
@@ -60,7 +61,8 @@ boolean httpPost(char * host, uint16_t port, char * url)
   } else {
       DebugF("failed!");
   }
-  Debugf(" in %d ms\r\n",millis()-start);
+  sprintf(buff," in %d ms\r\n",millis()-start);
+  Debug(buff);
   return ret;
 }
 /* ======================================================================
@@ -326,43 +328,43 @@ boolean httpRequest(void)
           {
             url.replace("%PAPP%", me->value);
           }
-		   if (valName == "ADCO")
+		      if (valName == "ADCO")
           {
             url.replace("%ADCO%", me->value);
           }
-		  if (valName == "OPTARIF")
+		      if (valName == "OPTARIF")
           {
             url.replace("%OPTARIF%", me->value);
           }
-		  if (valName == "ISOUC")
+		      if (valName == "ISOUC")
           {
             url.replace("%ISOUC%", me->value);
           }
-		  if (valName == "PTEC")
+		      if (valName == "PTEC")
           {
             url.replace("%PTEC%", me->value);
           }
-		  if (valName == "IINST")
+		      if (valName == "IINST")
           {
             url.replace("%IINST%", me->value);
           }
-		  if (valName == "IMAX")
+		      if (valName == "IMAX")
           {
             url.replace("%IMAX%", me->value);
           }
-		  if (valName == "HHPHC")
+		      if (valName == "HHPHC")
           {
             url.replace("%HHPHC%", me->value);
           }
-		  if (valName == "MOTDETAT")
+		      if (valName == "MOTDETAT")
           {
             url.replace("%MOTDETAT%", me->value);
           }
-		  if (valName == "BASE")
+		      if (valName == "BASE")
           {
             url.replace("%BASE%", me->value);
           }
-	 }
+	      }
       } // While me
 
       ret = httpPost( config.httpReq.host, config.httpReq.port, (char *) url.c_str()) ;
@@ -371,6 +373,7 @@ boolean httpRequest(void)
   return ret;
 }
 
+#ifdef SENSOR
 /* ======================================================================
 Function: UPD_switch
 Purpose : Do a http request to update Switch state into Domoticz
@@ -404,4 +407,5 @@ boolean UPD_switch(void)
   } // if host & idx
   return ret;
 }
+#endif
 

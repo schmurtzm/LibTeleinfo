@@ -147,8 +147,7 @@ typedef struct
   char  ota_auth[CFG_PSK_SIZE+1];  // OTA Authentication password
   uint32_t config;           		   // Bit field register 
   uint16_t ota_port;         		   // OTA port 
-  boolean  dbgfile;                 // true if debug on SPIFFS required
-  uint8_t  filler[130];      		   // in case adding data in config avoiding loosing current conf by bad crc
+  uint8_t  filler[131];      		   // in case adding data in config avoiding loosing current conf by bad crc
   _emoncms emoncms;                // Emoncms configuration
   _jeedom  jeedom;                 // jeedom configuration
   _httpRequest httpReq;            // HTTP request
@@ -158,7 +157,8 @@ typedef struct
 
 // Exported variables/object instancied in main sketch
 // ===================================================
-extern _Config config;
+extern _Config      config;
+extern char         buff[];
 
 #pragma pack(pop)
  

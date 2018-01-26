@@ -45,22 +45,29 @@ extern "C" {
 #include "webclient.h"
 #include "config.h"
 
-// Declare SIMU to work and test a non connected module
-#define SIMU
+// Décommenter SIMU pour compiler une version de test
+//  pour un module non connecté au compteur EDF (simule un ADCO et une valeur HCHC)
+//#define SIMU
 
-#define DEBUG
+// Décommenter DEBUG pour une version capable d'afficher du Debug
+//  soit sur Serial, soit sur Serial1 si compteur EDF raccordé sur Serial
+//#define DEBUG
 
-#define SENSOR
+//Décommenter SENSOR pour compiler une  version capable de gérer
+//  un contcat sec connecté entre Ground et D4
+//#define SENSOR
 
 // En mode SIMU, cela signifie que rien n'est connecté au port Serial
 // On peut donc laisser le debug sur ce port, pour beneficier de
 // l'affichage via Arduino IDE
+#ifdef DEBUG
 #ifdef SIMU
 #define DEBUG_SERIAL	Serial
 #else
 #define DEBUG_SERIAL	Serial1
 #define DEBUG_SERIAL1
-#endif
+#endif  //SIMU
+#endif  //DEBUG
 
 #define WIFINFO_VERSION "1.0.5a"
 
@@ -83,7 +90,7 @@ extern "C" {
 #define DebugF(x)   {}
 #define DebuglnF(x) {}
 #define Debugf(...) {}
-#define Debugflush  {}
+#define Debugflush()  {}
 #endif
 
 #define BLINK_LED_MS   50 // 50 ms blink
