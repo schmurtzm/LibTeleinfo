@@ -69,7 +69,7 @@ extern "C" {
 #endif  //SIMU
 #endif  //DEBUG
 
-#define WIFINFO_VERSION "1.0.5a"
+#define WIFINFO_VERSION "1.0.6"
 
 // voir : https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr/cores/arduino
 // le Serial.print sous toutes ses formes....
