@@ -4,7 +4,17 @@ This is a generic Teleinfo French Meter Measure Library
 - Initial Github source : <https://github.com/hallard/LibTeleinfo>
 - Modified Github source : <https://github.com/Doume/LibTeleinfo>
 
-# Modifications par Doume (version 1.0.5) :
+# Modifications par Doume (version 1.0.6) branche 'syslog' :
+
+- Permettre l'envoi des messages de debugging à un serveur rsyslog du réseau local
+			
+# Modifications par Doume (version 1.0.5a) branche 'static' :
+
+- Ajout de la gestion d'un contact sec, dont l'état peut être remonté vers Domoticz
+     exemple : le compteur EDF est souvent près du portail, donc on peut notifier
+     			l'état ouvert/fermé du portail en utilisant Wifinfo
+			
+# Modifications par Doume (version 1.0.5) branche 'static' :
 
 - Add support for request /emoncms.json
 
