@@ -40,6 +40,10 @@
 //              et flasher le sketch winfinfo.ino.bin via interface Web
 //       Rendre possible la compilation si define SENSOR en commentaire
 //              et DEFINE_DEBUG en commentaire (aucun debug, version Production...)
+//
+//       Version 1.0.6 (04/02/2018) Branche 'syslog' du github
+//		Ajout de la fonctionnalité 'Remote Syslog'
+//		Pour utiliser un serveur du réseau comme collecteur des messages Debug
 // **********************************************************************************
 // Include Arduino header
 #include <Arduino.h>
