@@ -42,8 +42,8 @@
 //              et DEFINE_DEBUG en commentaire (aucun debug, version Production...)
 //
 //       Version 1.0.6 (04/02/2018) Branche 'syslog' du github
-//		Ajout de la fonctionnalité 'Remote Syslog'
-//		Pour utiliser un serveur du réseau comme collecteur des messages Debug
+//		      Ajout de la fonctionnalité 'Remote Syslog'
+//		        Pour utiliser un serveur du réseau comme collecteur des messages Debug
 // **********************************************************************************
 // Include Arduino header
 #include <Arduino.h>
@@ -52,6 +52,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
+#include <Syslog.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 #include <Ticker.h>
@@ -101,6 +102,11 @@ char buff[132];   //To format debug strings
 // sysinfo data
 _sysinfo sysinfo;
 
+#ifdef SYSLOG
+WiFiUDP udpClient;
+Syslog syslog(udpClient, SYSLOG_PROTO_IETF);
+#endif
+
 // count Wifi connect attempts, to check stability
 int          nb_reconnect = 0;
 bool	       need_reinit = false;
@@ -125,6 +131,157 @@ int         SwitchState = -1;       // the current reading from the input pin
 int         lastSwitchState = -1;   // the previous reading from the input pin
 unsigned long lastChangeTime = 0;  // the last time the input pin was toggled
 unsigned long tempo = 200;    // temps necessaire a la stabilisation du switch (0,2 seconde)
+#endif
+
+#ifdef DEBUG
+// Versions polymorphes des appels au debugging
+// non liées au port Serial ou Serial1
+char logbuffer[255];
+
+#ifdef SYSLOG
+char waitbuffer[255];
+char *lines[50];
+int in=-1;
+int out=-1;
+#endif
+
+unsigned int pending = 0 ;
+volatile boolean SYSLOGusable=false;
+int plog=0;
+FS* _fs;    //Pointeur objet File System
+
+void convert(const __FlashStringHelper *ifsh)
+{
+  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+  plog=0;
+  while (1) {
+    unsigned char c = pgm_read_byte(p++);
+    if (c == 0) {
+      logbuffer[plog]=0;
+      break;
+    }
+    logbuffer[plog]=c;
+    plog++;
+  }
+}
+
+#ifdef SYSLOG
+void process_line(char *msg) {
+    strcat(waitbuffer,msg);
+    pending=strlen(waitbuffer);
+    if( waitbuffer[pending-1] == 0x0D || waitbuffer[pending-1] == 0x0A) {
+      //Cette ligne est complete : l'envoyer !
+      for(int i=0; i < pending-1; i++) {
+        //if(waitbuffer[i] == 0x0D || waitbuffer[i] == 0x0A)
+        if(waitbuffer[i] <= 0x20)
+          waitbuffer[i] = 0x20;
+      }
+      syslog.log(LOG_INFO,waitbuffer);
+      delay(2*pending);
+      memset(waitbuffer,0,255);
+      pending=0;
+      
+    }
+}
+#endif
+
+// Toutes les fonctions aboutissent sur la suivante :
+void Myprint(char *msg) {
+  DEBUG_SERIAL.print((char *)msg);
+#ifdef SYSLOG
+  if(SYSLOGusable) {
+    process_line(msg);   
+  } else {
+    //syslog non encore disponible
+    //stocker les messages à envoyer plus tard
+    in++;
+    if(in >= 50) {
+      //table saturée !
+      in=0;
+    }
+    if(lines[in]) {
+      //entrée occupée : l'écraser, tant pis !
+      free(lines[in]);
+    }
+    lines[in]=(char *)malloc(strlen(msg)+2);
+    memset(lines[in],0,strlen(msg+1));
+    strcpy(lines[in],msg);   
+  }
+#endif
+
+}
+
+void Myprint() {
+  logbuffer[0] = 0;
+  Myprint(logbuffer);
+}
+void Myprint(String msg) {
+  sprintf(logbuffer,"%s",msg.c_str());
+  Myprint(logbuffer);
+}
+void Myprint(const __FlashStringHelper *msg) {
+  convert(msg);
+  Myprint(logbuffer);
+}
+void Myprint(long i) {
+  sprintf(logbuffer,"%ld", i);
+  Myprint(logbuffer);
+}
+void Myprint(unsigned int i) {
+  sprintf(logbuffer,"%d", i);
+  Myprint(logbuffer);
+}
+void Myprint(int i) {
+  sprintf(logbuffer,"%d", i);
+  Myprint(logbuffer);
+}
+void Myprintln() {
+  sprintf(logbuffer,"\n");
+  Myprint(logbuffer);
+}
+void Myprintln(unsigned char *msg) {
+  sprintf(logbuffer,"%s\n",msg);
+  Myprint(logbuffer);
+}
+void Myprintln(String msg) {
+  sprintf(logbuffer,"%s\n",msg.c_str());
+  Myprint(logbuffer);
+}
+void Myprintln(const __FlashStringHelper *msg) {
+  convert(msg);
+  logbuffer[plog]=(char)'\n';
+  logbuffer[plog+1]=0;
+  Myprint(logbuffer);
+}
+void Myprintln(long i) {
+  sprintf((char *)logbuffer,"%ld\n", i);
+  Myprint(logbuffer);
+}
+void Myprintln(unsigned int i) {
+  sprintf(logbuffer,"%d\n", i);
+  Myprint(logbuffer);
+}
+void Myprintln(int i) {
+  sprintf(logbuffer,"%d\n", i);
+  Myprint(logbuffer);
+}
+
+void Myflush() {
+  
+}
+
+/*=====================================================================
+Function: put_log 
+Purpose : Ecrire buffer de log sur rsyslog serveur (remote)
+Input   : -
+Output  : - 
+Comments: -
+======================================================================*/
+
+
+void put_log(char *buff) { 
+  
+}
 #endif
 
 /* ======================================================================
@@ -463,9 +620,9 @@ int WifiHandleConn(boolean setup = false)
   
   if (setup) {
 #ifdef DEBUG
-    DebuglnF("========== SDK Saved parameters Start"); 
+    DebuglnF("========== WiFi diags start"); 
     WiFi.printDiag(DEBUG_SERIAL);
-    DebuglnF("========== SDK Saved parameters End"); 
+    DebuglnF("========== WiFi diags end"); 
     Debugflush();
 #endif
 
@@ -540,6 +697,17 @@ int WifiHandleConn(boolean setup = false)
       sprintf(toprint,"%d.%d.%d.%d", ad[0],ad[1],ad[2],ad[3]);
       DebugF("IP address   : "); Debugln(toprint);
       DebugF("MAC address  : "); Debugln(WiFi.macAddress());
+#ifdef SYSLOG
+      // Create a new syslog instance with LOG_KERN facility
+      syslog.server(SYSLOG_SERVER, SYSLOG_PORT);
+      syslog.deviceHostname(DEVICE_HOSTNAME);
+      syslog.appName(APP_NAME);
+      syslog.defaultPriority(LOG_KERN);
+      
+      memset(waitbuffer,0,255);
+      pending=0;
+      SYSLOGusable=true;
+#endif
     
     // not connected ? start AP
     } else {
@@ -620,24 +788,14 @@ void setup() {
   DEBUG_SERIAL.begin(115200);
 #endif
 
-  if (! SPIFFS.begin() )
-  {
-    // Serious problem
-    DebuglnF("SPIFFS Mount failed !");
-  } else {
-    DebuglnF("");
-    DebuglnF("SPIFFS Mount succesfull");
-
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {    
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      sprintf(buff,"FS File: %s, size: %d\n", fileName.c_str(), fileSize);
-      Debug(buff);
-    }
-    DebuglnF("");
-  }
-
+#ifdef SYSLOG
+  for(int i=0; i<50; i++)
+    lines[i]=0;
+  in=-1;
+  out=-1;
+#endif
+ 
+ 
   //WiFi.disconnect(false);
 
   // Set WiFi to station mode and disconnect from an AP if it was previously connected
@@ -649,14 +807,10 @@ void setup() {
   rgb_led.Begin();
   LedRGBOFF();
 
-  // Init the serial 1, Our Debug Serial TXD0
-  // note this serial can only transmit, just 
-  // enough for debugging purpose
-  Debugln(F("\r\n\r\n=============="));
+  Debugln(F("=============="));
   Debug(F("WifInfo V"));
   Debugln(F(WIFINFO_VERSION));
   Debugln();
-//  Debugflush();
 
   // Clear our global flags
   config.config = 0;
@@ -664,6 +818,7 @@ void setup() {
   // Our configuration is stored into EEPROM
   //EEPROM.begin(sizeof(_Config));
   EEPROM.begin(1024);
+
 
   DebugF("Config size="); Debug(sizeof(_Config));
   DebugF(" (emoncms=");   Debug(sizeof(_emoncms));
@@ -697,6 +852,40 @@ void setup() {
 
   // start Wifi connect or soft AP
   WifiHandleConn(true);
+
+  //purge previous debug message,
+
+#ifdef SYSLOG
+  if(in != out && in != -1) {
+      //Il y a des messages en attente d'envoi
+      out++;
+      while( out <= in ) {
+        process_line(lines[out]);
+        free(lines[out]);
+        lines[out]=0;
+        out++;
+      }
+  }
+#endif
+
+  // Init SPIFFS filesystem, to use web server static files
+  if (! SPIFFS.begin() )
+  {
+    // Serious problem
+    DebuglnF("SPIFFS Mount failed !");
+  } else {
+    DebuglnF("");
+    DebuglnF("SPIFFS Mount succesfull");
+
+    Dir dir = SPIFFS.openDir("/");
+    while (dir.next()) {    
+      String fileName = dir.fileName();
+      size_t fileSize = dir.fileSize();
+      sprintf(buff,"FS File: %s, size: %d\n", fileName.c_str(), fileSize);
+      Debug(buff);
+    }
+    //DebuglnF("");
+  }
 
   // OTA callbacks
   ArduinoOTA.onStart([]() { 

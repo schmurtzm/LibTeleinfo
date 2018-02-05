@@ -178,6 +178,7 @@ Comments: -
 ====================================================================== */
 void showConfig() 
 {
+  Debugln("");
   DebuglnF("===== Wifi"); 
   DebugF("ssid     :"); Debugln(config.ssid); 
   DebugF("psk      :"); Debugln(config.psk); 
@@ -189,9 +190,9 @@ void showConfig()
   if (config.config & CFG_RGB_LED) DebugF(" RGB"); 
   if (config.config & CFG_DEBUG)   DebugF(" DEBUG"); 
   if (config.config & CFG_LCD)     DebugF(" LCD"); 
+  Debugln("");
  
-
-  DebuglnF("\r\n===== Emoncms"); 
+  DebuglnF("===== Emoncms"); 
   DebugF("host     :"); Debugln(config.emoncms.host); 
   DebugF("port     :"); Debugln((int)config.emoncms.port); 
   DebugF("url      :"); Debugln(config.emoncms.url); 
@@ -199,7 +200,7 @@ void showConfig()
   DebugF("node     :"); Debugln(config.emoncms.node); 
   DebugF("freq     :"); Debugln(config.emoncms.freq); 
 
-  DebuglnF("\r\n===== Jeedom"); 
+  DebuglnF("===== Jeedom"); 
   DebugF("host     :"); Debugln(config.jeedom.host); 
   DebugF("port     :"); Debugln(config.jeedom.port); 
   DebugF("url      :"); Debugln(config.jeedom.url); 
@@ -207,11 +208,12 @@ void showConfig()
   DebugF("compteur :"); Debugln(config.jeedom.adco); 
   DebugF("freq     :"); Debugln(config.jeedom.freq); 
 
-  DebuglnF("\r\n===== HTTP request"); 
+  DebuglnF("===== HTTP request"); 
   DebugF("host     :"); Debugln(config.httpReq.host); 
   DebugF("port     :"); Debugln(config.httpReq.port); 
   DebugF("path     :"); Debugln(config.httpReq.path); 
   DebugF("freq     :"); Debugln(config.httpReq.freq); 
   DebugF("sw idx   :"); Debugln(config.httpReq.swidx); 
+  delay(1000);
 }
 
