@@ -7,6 +7,11 @@ This is a generic Teleinfo French Meter Measure Library
 # Modifications par Doume (version 1.0.6) branche 'syslog' :
 
 - Permettre l'envoi des messages de debugging à un serveur rsyslog du réseau local
+   les paramètres peuvent être configurés via l'interface Web, onglet 'Configuration'
+   panel 'Avancée'
+   Il suffit de laisser le paramètre 'Syslog host' vide, pour désactiver cette fonction.
+   Les envois sur le réseau utilisent le protocole UDP pour alimenter le serveur
+   distant
 			
 # Modifications par Doume (version 1.0.5a) branche 'static' :
 

@@ -39,6 +39,7 @@ extern bool		      need_reinit;
 extern bool         first_info_call;
 extern int          SwitchState;
 extern char         buff[];
+extern char         optval[];
 
 // Exported function instancied in webclient.cpp
 // =============================================

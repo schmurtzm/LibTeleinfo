@@ -1,8 +1,16 @@
 Le fichier Wifinfo.ino.bin disponible dans ce dossier a été compilé
-avec l'option DEBUG activée (sur Serial1) et la gestion d'un contact sec
-entre Ground et D5 (option SENSOR activée)
+le 10/02/2018 (version 1.0.6)
+Compilé avec l'option DEBUG (écriture sur le port Serial1) 
+et avec la gestion d'un contact sec (option SENSOR activée)
+
+L'option SYSLOG a été activée, donc il est possible d'obtenir
+  du debugging via un remote syslog, à condition de configurer
+  syslog host et syslog port dans la configuration avancée
+
+ Il s'agit donc d'une version 'étendue'
 
 Il peut être flashé via port série (outil ESPTOOL), 
 ou via l'interface Web de Wifinfo, à condition que vous ayez au préalable
 flashé le SPIFFS permettant la prise en compte des fichiers .ino.bin 
+ (version 1.0.5a minimum)
 

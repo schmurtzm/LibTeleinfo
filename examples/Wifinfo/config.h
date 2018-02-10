@@ -55,6 +55,7 @@
 #define DEFAULT_OTA_PORT     8266
 #define DEFAULT_OTA_AUTH     "OTA_WifInfo"
 //#define DEFAULT_OTA_AUTH     ""
+#define DEFAULT_SYSLOG_PORT  514
 
 // Bit definition for different configuration modes
 #define CFG_LCD				  0x0001	// Enable display
@@ -69,7 +70,9 @@
 #define CFG_FORM_AP_PSK   FPSTR("ap_psk")
 #define CFG_FORM_OTA_AUTH FPSTR("ota_auth")
 #define CFG_FORM_OTA_PORT FPSTR("ota_port")
-#define CFG_FORM_DBGFILE  FPSTR("dbg_file")
+#define CFG_FORM_SYSLOG_HOST FPSTR("syslog_host")
+#define CFG_FORM_SYSLOG_PORT FPSTR("syslog_port")
+
 
 #define CFG_FORM_EMON_HOST  FPSTR("emon_host")
 #define CFG_FORM_EMON_PORT  FPSTR("emon_port")
@@ -147,7 +150,9 @@ typedef struct
   char  ota_auth[CFG_PSK_SIZE+1];  // OTA Authentication password
   uint32_t config;           		   // Bit field register 
   uint16_t ota_port;         		   // OTA port 
-  uint8_t  filler[131];      		   // in case adding data in config avoiding loosing current conf by bad crc
+  char     syslog_host[64];        // Adresse IP ou DNS du serveur rsyslog
+  uint16_t syslog_port;            // port rsyslog (generalement 514)
+  uint8_t  filler[65];      		   // in case adding data in config avoiding loosing current conf by bad crc
   _emoncms emoncms;                // Emoncms configuration
   _jeedom  jeedom;                 // jeedom configuration
   _httpRequest httpReq;            // HTTP request

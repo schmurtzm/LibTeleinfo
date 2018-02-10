@@ -158,7 +158,10 @@ void handleFormConfig(void)
     strncpy(config.ota_auth,server.arg("ota_auth").c_str(), CFG_PSK_SIZE );
     itemp = server.arg("ota_port").toInt();
     config.ota_port = (itemp>=0 && itemp<=65535) ? itemp : DEFAULT_OTA_PORT ;
-
+    strncpy(config.syslog_host ,   server.arg("syslog_host").c_str(),     64 );
+    itemp = server.arg("syslog_port").toInt();
+    config.syslog_port = (itemp>=0 && itemp<=65535) ? itemp : DEFAULT_SYSLOG_PORT ;
+    
     // Emoncms
     strncpy(config.emoncms.host,   server.arg("emon_host").c_str(),  CFG_EMON_HOST_SIZE );
     strncpy(config.emoncms.url,    server.arg("emon_url").c_str(),   CFG_EMON_URL_SIZE );
@@ -453,6 +456,10 @@ void getSysJSONData(String & response)
   response += "{\"na\":\"WifInfo Version\",\"va\":\"" WIFINFO_VERSION "\"},\r\n";
 
   response += "{\"na\":\"Compile le\",\"va\":\"" __DATE__ " " __TIME__ "\"},\r\n";
+  
+  response += "{\"na\":\"Options de compilation\",\"va\":\"";
+  response += optval;
+  response += "\"},\r\n";
 
   response += "{\"na\":\"SDK Version\",\"va\":\"";
   response += system_get_sdk_version() ;
@@ -548,7 +555,7 @@ void emoncmsJSONTable()
 
   server.send ( 200, "text/json", response );
   //Debugln(response);
-  Debugln(F("Ok!"));
+  //Debugln(F("Ok!"));
   yield();  //Let a chance to other threads to work
 }
 
@@ -579,6 +586,8 @@ void getConfJSONData(String & r)
   r+=CFG_FORM_EMON_FREQ; r+=FPSTR(FP_QCQ); r+=config.emoncms.freq;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_OTA_AUTH;  r+=FPSTR(FP_QCQ); r+=config.ota_auth;       r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_OTA_PORT;  r+=FPSTR(FP_QCQ); r+=config.ota_port;       r+= FPSTR(FP_QCNL);
+  r+=CFG_FORM_SYSLOG_HOST; r+=FPSTR(FP_QCQ); r+=config.syslog_host;  r+= FPSTR(FP_QCNL); 
+  r+=CFG_FORM_SYSLOG_PORT; r+=FPSTR(FP_QCQ); r+=config.syslog_port;  r+= FPSTR(FP_QCNL);
   r+=CFG_FORM_JDOM_HOST; r+=FPSTR(FP_QCQ); r+=config.jeedom.host;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_JDOM_PORT; r+=FPSTR(FP_QCQ); r+=config.jeedom.port;   r+= FPSTR(FP_QCNL); 
   r+=CFG_FORM_JDOM_URL;  r+=FPSTR(FP_QCQ); r+=config.jeedom.url;    r+= FPSTR(FP_QCNL); 

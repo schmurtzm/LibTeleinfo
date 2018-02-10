@@ -44,6 +44,9 @@
 //       Version 1.0.6 (04/02/2018) Branche 'syslog' du github
 //		      Ajout de la fonctionnalité 'Remote Syslog'
 //		        Pour utiliser un serveur du réseau comme collecteur des messages Debug
+//            Note : Nécessité de flasher le SPIFFS pour pouvoir configurer le remote syslog
+//          Affichage des options de compilation sélectionnées dans l'onglet 'Système'
+//            et au début du Debug + syslog éventuels
 // **********************************************************************************
 // Include Arduino header
 #include <Arduino.h>
@@ -69,6 +72,7 @@
 //WiFiManager wifi(0);
 ESP8266WebServer server(80);
 bool ota_blink;
+char optval[48];
 
 // Teleinfo
 TInfo tinfo;
@@ -133,7 +137,8 @@ unsigned long lastChangeTime = 0;  // the last time the input pin was toggled
 unsigned long tempo = 200;    // temps necessaire a la stabilisation du switch (0,2 seconde)
 #endif
 
-#ifdef DEBUG
+/////////////////////////// uniquement si DEBUG ou SYSLOG //////////
+#ifdef MACRO
 // Versions polymorphes des appels au debugging
 // non liées au port Serial ou Serial1
 char logbuffer[255];
@@ -147,6 +152,7 @@ int out=-1;
 
 unsigned int pending = 0 ;
 volatile boolean SYSLOGusable=false;
+volatile boolean SYSLOGselected=false;
 int plog=0;
 FS* _fs;    //Pointeur objet File System
 
@@ -187,11 +193,15 @@ void process_line(char *msg) {
 
 // Toutes les fonctions aboutissent sur la suivante :
 void Myprint(char *msg) {
+  
+#ifdef DEBUG
   DEBUG_SERIAL.print((char *)msg);
+#endif
+
 #ifdef SYSLOG
-  if(SYSLOGusable) {
+  if( SYSLOGusable ) {
     process_line(msg);   
-  } else {
+  } else if ( SYSLOGselected) {
     //syslog non encore disponible
     //stocker les messages à envoyer plus tard
     in++;
@@ -270,19 +280,8 @@ void Myflush() {
   
 }
 
-/*=====================================================================
-Function: put_log 
-Purpose : Ecrire buffer de log sur rsyslog serveur (remote)
-Input   : -
-Output  : - 
-Comments: -
-======================================================================*/
-
-
-void put_log(char *buff) { 
-  
-}
-#endif
+#endif    //MACRO
+/////////////////////////////////////////////////////////////////////////
 
 /* ======================================================================
 Function: UpdateSysinfo 
@@ -493,8 +492,6 @@ Comments: -
 ====================================================================== */
 void NewFrame(ValueList * me) 
 {
-  char buff[32];
-
   // Light the RGB LED 
   if ( config.config & CFG_RGB_LED) {
     LedRGBON(COLOR_GREEN);
@@ -502,9 +499,7 @@ void NewFrame(ValueList * me)
     // led off after delay
     rgb_ticker.once_ms( (uint32_t) BLINK_LED_MS, LedOff, (int) RGB_LED_PIN);
   }
-
-  //sprintf_P( buff, PSTR("New Frame (%ld Bytes free)"), ESP.getFreeHeap() );
-  //Debugln(buff);
+  Debugln("NewFrame received");
 }
 
 /* ======================================================================
@@ -517,8 +512,6 @@ Comments: it's called only if one data in the frame is different than
 ====================================================================== */
 void UpdatedFrame(ValueList * me)
 {
-  char buff[32];
-  
   // Light the RGB LED (purple)
   if ( config.config & CFG_RGB_LED) {
     LedRGBON(COLOR_MAGENTA);
@@ -526,9 +519,7 @@ void UpdatedFrame(ValueList * me)
     // led off after delay
     rgb_ticker.once_ms(BLINK_LED_MS, LedOff, RGB_LED_PIN);
   }
-
-  //sprintf_P( buff, PSTR("Updated Frame (%ld Bytes free)"), ESP.getFreeHeap() );
-  //Debugln(buff);
+  Debugln("UpdatedFrame received");
 
 /*
   // Got at least one ?
@@ -698,15 +689,20 @@ int WifiHandleConn(boolean setup = false)
       DebugF("IP address   : "); Debugln(toprint);
       DebugF("MAC address  : "); Debugln(WiFi.macAddress());
 #ifdef SYSLOG
+    if (*config.syslog_host) {
+      SYSLOGselected=true;
       // Create a new syslog instance with LOG_KERN facility
-      syslog.server(SYSLOG_SERVER, SYSLOG_PORT);
-      syslog.deviceHostname(DEVICE_HOSTNAME);
+      syslog.server(config.syslog_host, config.syslog_port);
+      syslog.deviceHostname(config.host);
       syslog.appName(APP_NAME);
       syslog.defaultPriority(LOG_KERN);
-      
       memset(waitbuffer,0,255);
       pending=0;
       SYSLOGusable=true;
+    } else {
+      SYSLOGusable=false;
+      SYSLOGselected=false;
+    }
 #endif
     
     // not connected ? start AP
@@ -783,6 +779,35 @@ void setup() {
   // Set CPU speed to 160MHz
   system_update_cpu_freq(160);
 
+  SYSLOGselected=true;  //Par défaut, au moins stocker les premiers msg debug
+  SYSLOGusable=false;   //Tant que non connecté, ne pas émettre sur réseau
+  
+  memset(optval,0,48);
+
+#ifdef SIMU
+  strcat(optval,"SIMU, ");
+#else
+  strcat(optval, "No SIMU, ");
+#endif
+
+#ifdef DEBUG
+  strcat(optval,"DEBUG, ");
+#else
+  strcat(optval, "No DEBUG, ");
+#endif
+
+#ifdef SYSLOG
+  strcat(optval,"SYSLOG, ");
+#else
+  strcat(optval, "No SYSLOG, ");
+#endif
+
+#ifdef SENSOR
+  strcat(optval,"SENSOR");
+#else
+  strcat(optval, "No SENSOR");
+#endif
+
   // Check File system init 
 #ifdef DEBUG
   DEBUG_SERIAL.begin(115200);
@@ -810,6 +835,8 @@ void setup() {
   Debugln(F("=============="));
   Debug(F("WifInfo V"));
   Debugln(F(WIFINFO_VERSION));
+  Debug(F("Options : "));
+  Debugln(optval);
   Debugln();
 
   // Clear our global flags
@@ -856,15 +883,20 @@ void setup() {
   //purge previous debug message,
 
 #ifdef SYSLOG
-  if(in != out && in != -1) {
-      //Il y a des messages en attente d'envoi
-      out++;
-      while( out <= in ) {
-        process_line(lines[out]);
-        free(lines[out]);
-        lines[out]=0;
+  if(SYSLOGselected) {
+    if(in != out && in != -1) {
+        //Il y a des messages en attente d'envoi
         out++;
-      }
+        while( out <= in ) {
+          process_line(lines[out]);
+          free(lines[out]);
+          lines[out]=0;
+          out++;
+        }
+        DebuglnF("syslog buffer empty");
+    }
+  } else {
+    DebuglnF("syslog not activated !");
   }
 #endif
 

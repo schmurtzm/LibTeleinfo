@@ -183,9 +183,12 @@ void showConfig()
   DebugF("ssid     :"); Debugln(config.ssid); 
   DebugF("psk      :"); Debugln(config.psk); 
   DebugF("host     :"); Debugln(config.host); 
+  DebuglnF("===== Avancé"); 
   DebugF("ap_psk   :"); Debugln(config.ap_psk); 
   DebugF("OTA auth :"); Debugln(config.ota_auth); 
   DebugF("OTA port :"); Debugln(config.ota_port); 
+  DebugF("syslog host :"); Debugln(config.syslog_host); 
+  DebugF("syslog port :"); Debugln(config.syslog_port); 
   DebugF("Config   :"); 
   if (config.config & CFG_RGB_LED) DebugF(" RGB"); 
   if (config.config & CFG_DEBUG)   DebugF(" DEBUG"); 

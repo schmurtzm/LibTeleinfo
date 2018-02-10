@@ -48,11 +48,12 @@ extern "C" {
 
 // Décommenter SIMU pour compiler une version de test
 //  pour un module non connecté au compteur EDF (simule un ADCO et une valeur HCHC)
-#define SIMU
+// Le port Serial sera alors utilisé pour le DEBUG (accessible via USB pour l'IDE)
+//#define SIMU
 
 // Décommenter DEBUG pour une version capable d'afficher du Debug
 //  soit sur Serial, soit sur Serial1 si compteur EDF raccordé sur Serial
-#define DEBUG
+//#define DEBUG
 
 // Décommenter SYSLOG pour une version capable d'envoyer du Debug
 //  vers un serveur rsyslog du réseau
@@ -66,6 +67,7 @@ extern "C" {
 // On peut donc laisser le debug sur ce port, pour beneficier de
 // l'affichage via Arduino IDE
 #ifdef DEBUG
+#define MACRO
 #ifdef SIMU
 #define DEBUG_SERIAL	Serial
 #else
@@ -77,17 +79,9 @@ extern "C" {
 #define WIFINFO_VERSION "1.0.6"
 
 #ifdef SYSLOG
-// definition Syslog serveur
-#define SYSLOG_SERVER "192.168.2.10"
-#define SYSLOG_PORT 514
-
+#define MACRO
 // Definit le client syslog
-#define DEVICE_HOSTNAME "ESP8266"
 #define APP_NAME "Wifinfo"
-
-// A UDP instance to let us send and receive packets over UDP
-
-
 #endif
 
 // voir : https://github.com/arduino/Arduino/tree/master/hardware/arduino/avr/cores/arduino
@@ -96,7 +90,7 @@ extern "C" {
 // I prefix debug macro to be sure to use specific for THIS library
 // debugging, this should not interfere with main sketch or other 
 // libraries
-#ifdef DEBUG
+#ifdef MACRO
 #define Debug(x)    Myprint(x)
 #define Debugln(x)  Myprintln(x)
 #define DebugF(x)   Myprint(F(x))
@@ -167,6 +161,7 @@ extern Ticker Tick_jeedom;
 extern Ticker Tick_httpRequest;
 
 
+
 // Exported function located in main sketch
 // ===================================================
 void ResetConfig(void);
@@ -174,7 +169,7 @@ void Task_emoncms();
 void Task_jeedom();
 void Task_httpRequest();
 
-#ifdef DEBUG
+#ifdef MACRO
 void Myprint(void);
 void Myprint(unsigned char *msg);
 void Myprint(String msg);
@@ -186,7 +181,7 @@ void Myprintln(String msg);
 void Myprintln(const __FlashStringHelper *msg);
 void Myprintln(unsigned int i);
 void Myflush(void);
-#endif
+#endif    //MACRO
 
 #endif
 
