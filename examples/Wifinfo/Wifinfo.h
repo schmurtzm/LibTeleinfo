@@ -63,19 +63,21 @@ extern "C" {
 
 //Décommenter SENSOR pour compiler une  version capable de gérer
 //  un contact sec connecté entre Ground et D5 (GPIO-14)
-//#define SENSOR
+#define SENSOR
 
 // En mode SIMU, cela signifie que rien n'est connecté au port Serial
 // On peut donc laisser le debug sur ce port, pour beneficier de
 // l'affichage via Arduino IDE
 #ifdef DEBUG
 #define MACRO
+
 #ifdef SIMU
 #define DEBUG_SERIAL	Serial
 #else
 #define DEBUG_SERIAL	Serial1
 #define DEBUG_SERIAL1
 #endif  //SIMU
+
 #endif  //DEBUG
 
 #define WIFINFO_VERSION "1.0.6"

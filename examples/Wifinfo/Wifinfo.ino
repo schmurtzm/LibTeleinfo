@@ -1,4 +1,4 @@
-#include <WiFiUdp.h>// **********************************************************************************
+// **********************************************************************************
 // ESP8266 Teleinfo WEB Server
 // **********************************************************************************
 // Creative Commons Attrib Share-Alike License
@@ -55,6 +55,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
+#include <Syslog.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 #include <Ticker.h>
@@ -106,7 +107,6 @@ char buff[132];   //To format debug strings
 _sysinfo sysinfo;
 
 #ifdef SYSLOG
-#include <Syslog.h>
 WiFiUDP udpClient;
 Syslog syslog(udpClient, SYSLOG_PROTO_IETF);
 #endif
@@ -809,7 +809,7 @@ void setup() {
   strcat(optval, "No SENSOR");
 #endif
 
-  // Check File system init 
+
 #ifdef DEBUG
   DEBUG_SERIAL.begin(115200);
 #endif
@@ -820,7 +820,15 @@ void setup() {
   in=-1;
   out=-1;
 #endif
- 
+
+  // Teleinfo is connected to RXD2 (GPIO13 or D7) to 
+  // avoid conflict when flashing, this is why
+  // we swap RXD1/TXD1 to RXD2/TXD2 
+  // Note that TXD2 is not used : teleinfo is "receive only"
+#ifdef DEBUG_SERIAL1
+    Serial.begin(1200, SERIAL_7E1);
+    Serial.swap();
+#endif
  
   //WiFi.disconnect(false);
 
@@ -1049,15 +1057,6 @@ void setup() {
   showConfig();
 
   Debugln(F("HTTP server started"));
-
-  // Teleinfo is connected to RXD2 (GPIO13) to 
-  // avoid conflict when flashing, this is why
-  // we swap RXD1/TXD1 to RXD2/TXD2 
-  // Note that TXD2 is not used teleinfo is receive only
-  #ifdef DEBUG_SERIAL1
-    Serial.begin(1200, SERIAL_7E1);
-    Serial.swap();
-  #endif
 
   // Init teleinfo
   need_reinit=false;
