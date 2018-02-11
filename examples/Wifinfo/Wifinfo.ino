@@ -826,16 +826,13 @@ void setup() {
   // we swap RXD1/TXD1 to RXD2/TXD2 
   // Note that TXD2 is not used : teleinfo is "receive only"
 #ifdef DEBUG_SERIAL1
-    Serial.begin(1200, SERIAL_7E1);
-    Serial.swap();
+  Serial.begin(1200, SERIAL_7E1);
+  Serial.swap();
+  Debugln("Sortie Debug sur D4 (TXD2), entrée Teleinfo sur D7 (RXD1)");
+#else
+  Debugln("Sortie Debug sur Serial (TXD1), pas de Teleinfo possible");
 #endif
  
-  //WiFi.disconnect(false);
-
-  // Set WiFi to station mode and disconnect from an AP if it was previously connected
-  //WiFi.mode(WIFI_AP_STA);
-  //WiFi.disconnect();
-  //delay(1000);
 
   // Init the RGB Led, and set it off
   rgb_led.Begin();

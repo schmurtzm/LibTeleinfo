@@ -78,6 +78,16 @@ extern "C" {
 #define DEBUG_SERIAL1
 #endif  //SIMU
 
+#else
+// DEBUG not set
+
+#ifdef SIMU
+#define DEBUG_SERIAL  Serial
+#else
+#define DEBUG_SERIAL  Serial1
+#define DEBUG_SERIAL1
+#endif  //SIMU
+
 #endif  //DEBUG
 
 #define WIFINFO_VERSION "1.0.6"
