@@ -178,7 +178,6 @@ void process_line(char *msg) {
     if( waitbuffer[pending-1] == 0x0D || waitbuffer[pending-1] == 0x0A) {
       //Cette ligne est complete : l'envoyer !
       for(int i=0; i < pending-1; i++) {
-        //if(waitbuffer[i] == 0x0D || waitbuffer[i] == 0x0A)
         if(waitbuffer[i] <= 0x20)
           waitbuffer[i] = 0x20;
       }
@@ -195,7 +194,7 @@ void process_line(char *msg) {
 void Myprint(char *msg) {
   
 #ifdef DEBUG
-  DEBUG_SERIAL.print((char *)msg);
+  DEBUG_SERIAL.print(msg);
 #endif
 
 #ifdef SYSLOG

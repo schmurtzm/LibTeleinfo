@@ -325,6 +325,7 @@ void tinfoJSONTable(void)
   if (! me ) //&& first_info_call) 
   {
     //Let tinfo such time to build a list....
+    Debug(F("No list yet...\r\n"));
     first_info_call=false;
     unsigned long topdebut = millis();
     bool expired = false;
@@ -342,7 +343,7 @@ void tinfoJSONTable(void)
   // Got at least one ?
   if (me) {
     uint8_t index=0;
-    
+
     first_info_call=false;
     boolean first_item = true;
     // Json start
@@ -355,8 +356,12 @@ void tinfoJSONTable(void)
       if(! first_item) 
         // go to next node
         me = me->next;
-
- 
+      else
+        if(me->free ) {
+          //1st item is free : empty list !
+          Debugln("Teleinfo list is empty !");
+          break;
+        }
 
       if( ! me->free ) {
         // First item do not add , separator
@@ -364,7 +369,7 @@ void tinfoJSONTable(void)
           first_item = false;
         else 
           response += F(",\r\n");
-          
+
         if(validate_value_name(me->name)) {
           //It's a known name : process the entry      
           response += F("{\"na\":\"");

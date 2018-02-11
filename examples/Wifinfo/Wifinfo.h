@@ -53,6 +53,8 @@ extern "C" {
 
 // Décommenter DEBUG pour une version capable d'afficher du Debug
 //  soit sur Serial, soit sur Serial1 si compteur EDF raccordé sur Serial
+// Attention : si SIMU n'est pas déclaré, le debug est envoyé sur Serial1
+//  donc n'est pas visible au travers du port USB pour Arduino IDE !
 //#define DEBUG
 
 // Décommenter SYSLOG pour une version capable d'envoyer du Debug
