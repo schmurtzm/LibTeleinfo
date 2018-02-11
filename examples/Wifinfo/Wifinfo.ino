@@ -1,4 +1,4 @@
-// **********************************************************************************
+#include <WiFiUdp.h>// **********************************************************************************
 // ESP8266 Teleinfo WEB Server
 // **********************************************************************************
 // Creative Commons Attrib Share-Alike License
@@ -55,7 +55,6 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
-#include <Syslog.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 #include <Ticker.h>
@@ -107,6 +106,7 @@ char buff[132];   //To format debug strings
 _sysinfo sysinfo;
 
 #ifdef SYSLOG
+#include <Syslog.h>
 WiFiUDP udpClient;
 Syslog syslog(udpClient, SYSLOG_PROTO_IETF);
 #endif
@@ -778,8 +778,10 @@ void setup() {
   // Set CPU speed to 160MHz
   system_update_cpu_freq(160);
 
+#ifdef SYSLOG
   SYSLOGselected=true;  //Par défaut, au moins stocker les premiers msg debug
   SYSLOGusable=false;   //Tant que non connecté, ne pas émettre sur réseau
+#endif
   
   memset(optval,0,48);
 
