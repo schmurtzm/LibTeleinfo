@@ -718,7 +718,7 @@ void sendJSON(void)
   
   ESP.wdtFeed();  //Force software watchdog to restart from 0
 
-  Debug(F("Serving /json page..."));
+  //Debug(F("Serving /json page..."));
   // Got at least one ?
   if (me) {
     // Json start
@@ -755,7 +755,7 @@ void sendJSON(void)
   }
   server.send ( 200, "text/json", response );
   //Debugln(response);
-  Debugln(F("Ok!"));
+  //Debugln(F("Ok!"));
   yield();  //Let a chance to other threads to work
 }
 

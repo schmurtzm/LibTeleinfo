@@ -498,7 +498,7 @@ void NewFrame(ValueList * me)
     // led off after delay
     rgb_ticker.once_ms( (uint32_t) BLINK_LED_MS, LedOff, (int) RGB_LED_PIN);
   }
-  Debugln("NewFrame received");
+  //Debugln("NewFrame received");
 }
 
 /* ======================================================================
@@ -518,7 +518,7 @@ void UpdatedFrame(ValueList * me)
     // led off after delay
     rgb_ticker.once_ms(BLINK_LED_MS, LedOff, RGB_LED_PIN);
   }
-  Debugln("UpdatedFrame received");
+  //Debugln("UpdatedFrame received");
 
 /*
   // Got at least one ?
