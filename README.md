@@ -4,6 +4,9 @@ This is a generic Teleinfo French Meter Measure Library
 - Initial Github source : <https://github.com/hallard/LibTeleinfo>
 - Modified Github source : <https://github.com/Doume/LibTeleinfo>
 
+# Modifications par theGressier (version 1.0.7)
+- Modification de l'envoi des données à Jeedom suite à la mise à jour du plugin Teleinfo en v4 (changement API, POST JSON)
+
 # Modifications par Doume (version 1.0.6) branche 'syslog' :
 
 - Permettre l'envoi des messages de debugging à un serveur rsyslog du réseau local
