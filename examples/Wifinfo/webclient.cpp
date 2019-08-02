@@ -16,6 +16,9 @@
 //
 // History : V1.00 2015-12-04 - First release
 //
+// Modifié par theGressier
+//       Version 1.0.7 2019-08-02 Changement fonction jeedomPost et httpPost
+//
 // All text above must be included in any redistribution.
 //
 // **********************************************************************************
@@ -28,32 +31,38 @@ Purpose : Do a http post
 Input   : hostname
           port
           url
+          data
 Output  : true if received 200 OK
 Comments: -
 ====================================================================== */
-boolean httpPost(char * host, uint16_t port, char * url)
+boolean httpPost(char * host, uint16_t port, char * url, char * data)
 {
   HTTPClient http;
   bool ret = false;
+  int httpCode=0;
 
   unsigned long start = millis();
 
   // configure traged server and url
   http.begin(host, port, url); 
-  //http.begin("http://emoncms.org/input/post.json?node=20&apikey=2f13e4608d411d20354485f72747de7b&json={PAPP:100}");
-  //http.begin("emoncms.org", 80, "/input/post.json?node=20&apikey=2f13e4608d411d20354485f72747de7b&json={}"); //HTTP
 
   sprintf(buff,"http%s://%s:%d%s => ", port==443?"s":"", host, port, url);
   Debug(buff);
 
   // start connection and send HTTP header
-  int httpCode = http.GET();
+  if ( *data ) { // data string is not null, use POST instead of GET
+    http.addHeader("Content-Type", "application/json");  //Specify content-type header
+    httpCode = http.POST(data);
+  } else {
+    httpCode = http.GET();
+  }
+  
   if(httpCode) {
       // HTTP header has been send and Server response header has been handled
       Debug(httpCode);
       Debug(" ");
       // file found at server
-      if(httpCode == 200) {
+      if(httpCode >= 200 && httpCode < 300) {
         String payload = http.getString();
         Debug(payload);
         ret = true;
@@ -61,6 +70,9 @@ boolean httpPost(char * host, uint16_t port, char * url)
   } else {
       DebugF("failed!");
   }
+
+  http.end();  //Close connection
+  
   sprintf(buff," in %d ms\r\n",millis()-start);
   Debug(buff);
   return ret;
@@ -207,7 +219,7 @@ boolean emoncmsPost(void)
       url += build_emoncms_json();  //Get Teleinfo list of values
 
       // And submit all to emoncms
-      ret = httpPost( config.emoncms.host, config.emoncms.port, (char *) url.c_str()) ;
+      ret = httpPost( config.emoncms.host, config.emoncms.port, (char *) url.c_str(), NULL) ;
 
     } // if me
   } // if host
@@ -226,53 +238,44 @@ boolean jeedomPost(void)
   boolean ret = false;
 
   // Some basic checking
-  if (*config.jeedom.host) {
+  if (*config.jeedom.host && *config.jeedom.adco) {
     ValueList * me = tinfo.getList();
     // Got at least one ?
     if (me && me->next) {
       String url ; 
-      boolean skip_item;
-
       url = *config.jeedom.url ? config.jeedom.url : "/";
-      url += "?";
-
-      // Config identifiant forcée ?
-      if (*config.jeedom.adco) {
-        url+= F("ADCO=");
-        url+= config.jeedom.adco;
-        url+= "&";
-      } 
-
-      url += F("api=") ;
-      url += config.jeedom.apikey;
-      url += F("&") ;
-
+      url += "?";     
+      if (*config.jeedom.apikey) {
+        url += F("apikey=") ;
+        url += config.jeedom.apikey;
+      }
+      
+      String data = "{\"device\":{\"";
+      data += config.jeedom.adco;
+      data += "\":{\"device\":\"";
+      data += config.jeedom.adco;
+      data += "\"";
+            
       // Loop thru the node
       while (me->next) {
         // go to next node
         me = me->next;
-        skip_item = false;
 
-        // Si ADCO déjà renseigné, on le remet pas
-        if (!strcmp(me->name, "ADCO")) {
-          if (*config.jeedom.adco)
-            skip_item = true;
-        }
-
-        // Si Item virtuel, on le met pas
-        if (*me->name =='_')
-          skip_item = true;
-
-        // On doit ajouter l'item ?
-        if (!skip_item) {
-          url +=  me->name ;
-          url += "=" ;
-          url +=  me->value;
-          url += "&" ;
+        if( ! me->free ) {
+          if(validate_value_name(me->name)) {  
+            data += ",\"";
+            data += me->name;
+            data += "\":\"";
+            data += me->value;
+            data += "\"";
+          }
         }
       } // While me
-
-      ret = httpPost( config.jeedom.host, config.jeedom.port, (char *) url.c_str()) ;
+      // Json end
+      data += "}}}";
+      Debug(data);
+      
+      ret = httpPost( config.jeedom.host, config.jeedom.port, (char *) url.c_str(), (char *) data.c_str()) ;
     } // if me
   } // if host
   return ret;
@@ -367,7 +370,7 @@ boolean httpRequest(void)
 	      }
       } // While me
 
-      ret = httpPost( config.httpReq.host, config.httpReq.port, (char *) url.c_str()) ;
+      ret = httpPost( config.httpReq.host, config.httpReq.port, (char *) url.c_str(), NULL) ;
     } // if me
   } // if host
   return ret;
@@ -402,10 +405,9 @@ boolean UPD_switch(void)
 
       sprintf(url,"/json.htm?type=command&param=switchlight&idx=%d&switchcmd=%s",(int)config.httpReq.swidx, State);
       //Debugf("Updating switch: <%s>\n",  url );
-      ret = httpPost( config.httpReq.host, port, url) ;
+      ret = httpPost( config.httpReq.host, port, url, NULL) ;
    
   } // if host & idx
   return ret;
 }
 #endif
-

@@ -16,6 +16,9 @@
 //
 // History : V1.00 2015-12-04 - First release
 //
+// Modifié par theGressier
+//       Version 1.0.7 2019-08-02 Changement API fonction httpPost
+//       
 // All text above must be included in any redistribution.
 //
 // **********************************************************************************
@@ -37,7 +40,7 @@ extern bool          validate_value_name(String name);
 
 // declared exported function from webclient.cpp
 // ===================================================
-boolean httpPost(char * host, uint16_t port, char * url);
+boolean httpPost(char * host, uint16_t port, char * url, char * data);
 boolean emoncmsPost(void);
 boolean jeedomPost(void);
 boolean httpRequest(void);
