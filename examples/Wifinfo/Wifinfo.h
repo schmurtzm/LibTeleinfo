@@ -59,11 +59,11 @@ extern "C" {
 
 // Décommenter SYSLOG pour une version capable d'envoyer du Debug
 //  vers un serveur rsyslog du réseau
-#define SYSLOG
+// #define SYSLOG
 
 //Décommenter SENSOR pour compiler une  version capable de gérer
 //  un contact sec connecté entre Ground et D5 (GPIO-14)
-#define SENSOR
+// #define SENSOR
 
 // En mode SIMU, cela signifie que rien n'est connecté au port Serial
 // On peut donc laisser le debug sur ce port, pour beneficier de
@@ -90,7 +90,7 @@ extern "C" {
 
 #endif  //DEBUG
 
-#define WIFINFO_VERSION "1.0.6"
+#define WIFINFO_VERSION "1.0.7"
 
 #ifdef SYSLOG
 #define MACRO
@@ -198,4 +198,3 @@ void Myflush(void);
 #endif    //MACRO
 
 #endif
-
