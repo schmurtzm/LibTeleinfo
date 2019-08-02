@@ -47,6 +47,9 @@
 //            Note : Nécessité de flasher le SPIFFS pour pouvoir configurer le remote syslog
 //          Affichage des options de compilation sélectionnées dans l'onglet 'Système'
 //            et au début du Debug + syslog éventuels
+//
+//       Version 1.0.7 (02/09/2019) Branche 'syslog' du github
+//          Changement fonction jeedomPost et httpPost
 // **********************************************************************************
 // Include Arduino header
 #include <Arduino.h>
