@@ -739,7 +739,9 @@ int WifiHandleConn(boolean setup = false)
       }
       WiFi.mode(WIFI_AP_STA);
 
-      DebugF("IP address   : "); Debugln(WiFi.softAPIP());
+      ad = WiFi.softAPIP();
+      sprintf(toprint,"%d.%d.%d.%d", ad[0],ad[1],ad[2],ad[3]);
+      DebugF("IP address   : "); Debugln(toprint);
       DebugF("MAC address  : "); Debugln(WiFi.softAPmacAddress());
     }
 
