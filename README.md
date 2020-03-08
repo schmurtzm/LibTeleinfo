@@ -4,6 +4,42 @@ This is a generic Teleinfo French Meter Measure Library
 - Initial Github source : <https://github.com/hallard/LibTeleinfo>
 - Modified Github source : <https://github.com/Doume/LibTeleinfo>
 
+
+
+
+
+# Modifications par Schmurtzm (version 1.0.8)
+- Changement Wifi manager : Autoconnect (Quick and dirty modifications)
+   https://github.com/Hieromon/AutoConnect
+
+# Quelques informations complémentaires :
+Ceci permet d'utiliser un ESP8266 pour récupérer les information d'un compteur électrique
+
+- Compatible uniquement avec les linky en mode historique (mode standard non supporté)
+   le mode actuel de votre linky peut-être consulté directement sur celui-ci.
+   Pour un linky, il Convient de changer la résistance d'entrée du TIC par une valeur plus faible (1.2k au lieu de 4.3k)
+- Aide mémoire pour le montage :
+Image pour vérifier la polarité de l'optocoupleur et du mosfet:
+
+Rappel du schema complet pour ESP :
+- Aide mémoire pour le diagnostique si aucune donnée n'est remontée :
+Si votre montage ne fonctionne pas utiliser un oscilloscope en sortie de TIC, puis derrière l'optocoupleur et enfin derrière le Mosfet. Vous dezvez systématiquement avoir un signal de ce genre :
+
+image
+
+Dans le but de diagnostiquer votre montage, vous pouvez également utiliser un FTDI connecté via Termite avec le paramétrage suivant :
+
+
+
+
+
+
+
+
+
+   
+- Montage
+
 # Modifications par theGressier (version 1.0.7)
 - Modification de l'envoi des données à Jeedom suite à la mise à jour du plugin Teleinfo en v4 (changement API, POST JSON)
 

@@ -90,7 +90,7 @@ extern "C" {
 
 #endif  //DEBUG
 
-#define WIFINFO_VERSION "1.0.7"
+#define WIFINFO_VERSION "1.0.8"
 
 #ifdef SYSLOG
 #define MACRO
@@ -102,7 +102,7 @@ extern "C" {
 // le Serial.print sous toutes ses formes....
 
 // I prefix debug macro to be sure to use specific for THIS library
-// debugging, this should not interfere with main sketch or other 
+// debugging, this should not interfere with main sketch or other
 // libraries
 #ifdef MACRO
 #define Debug(x)    Myprint(x)
@@ -120,7 +120,7 @@ extern "C" {
 #endif
 
 #define BLINK_LED_MS   50 // 50 ms blink
-#define RGB_LED_PIN    14 
+#define RGB_LED_PIN    14
 #define RED_LED_PIN    12
 
 // value for HSL color
@@ -157,7 +157,7 @@ extern "C" {
 #define LedRGBON(x) {}
 #endif
 // sysinfo informations
-typedef struct 
+typedef struct
 {
   String sys_uptime;
 } _sysinfo;
@@ -198,4 +198,3 @@ void Myflush(void);
 #endif    //MACRO
 
 #endif
-

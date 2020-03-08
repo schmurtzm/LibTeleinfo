@@ -19,6 +19,9 @@
 // Modifié par theGressier
 //       Version 1.0.7 2019-08-02 Changement API fonction httpPost
 //       
+// Modifié par Schmurtzm
+//       Version 1.0.8 2020-03-08 Changement Wifi manager : Autoconnect 
+//
 // All text above must be included in any redistribution.
 //
 // **********************************************************************************

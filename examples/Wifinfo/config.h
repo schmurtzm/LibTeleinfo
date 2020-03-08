@@ -53,7 +53,7 @@
 
 // Port pour l'OTA
 #define DEFAULT_OTA_PORT     8266
-#define DEFAULT_OTA_AUTH     "OTA_WifInfo"
+#define DEFAULT_OTA_AUTH     "WifInfo"
 //#define DEFAULT_OTA_AUTH     ""
 #define DEFAULT_SYSLOG_PORT  514
 
@@ -175,4 +175,3 @@ void showConfig(void);
 
 
 #endif 
-
